@@ -1,3 +1,2 @@
-# SPPrj : System Programming Project.
-
-Hello world.
+# SPPrj
+The SPPrj is System Programming Project.
