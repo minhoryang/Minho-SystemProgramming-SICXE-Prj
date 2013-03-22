@@ -1,5 +1,5 @@
 SRC_DIR = ..
-TARGET = tokenizer
+TARGET = alloc debug hash hex list
 
 build: $(addsuffix .o, $(TARGET))
 tests: $(addsuffix .test, $(TARGET))
