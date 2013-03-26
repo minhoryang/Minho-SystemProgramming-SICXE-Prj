@@ -6,14 +6,20 @@
 #include "modules/tokenizer.h"
 
 int main(int argc, char *argv[]){
-	FILE *fp = argument_file_opener(argc, argv);  // open file.
+	FILE *fin = argument_file_opener(argc, argv), *fout;  // open file.
 	char *line = (char *)calloc(Tokenizer_Max_Length, sizeof(char)), *out;
 
-	while(fgets(line, Tokenizer_Max_Length, fp) != NULL){  // for every inputed lines,
-		printf("%s", (out = Tokenizer(line))); free(out);  // Tokenizer works perfectly.
+    if(fin == stdin)
+		fout = stdout;
+	else
+		fout = fopen("output.txt", "w");
+
+	while(fgets(line, Tokenizer_Max_Length, fin) != NULL){  // for every inputed lines,
+		fprintf(fout, "%s", (out = Tokenizer(line))); free(out);  // Tokenizer works perfectly.
 	}
 
 	free(line);  // cleanup.
-	fclose(fp);
+	fclose(fin);
+	fclose(fout);
 	return 0;
 }

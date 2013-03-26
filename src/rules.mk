@@ -5,7 +5,7 @@ CFLAGS = -I$(SRC_DIR) -Wall
 
 .PHONY: clean
 clean:
-	@rm -rf $(DEST_DIR)/../20091631.out $(DEST_DIR)
+	@rm -rf $(DEST_DIR)/../20091631.out $(DST_DIR)/../output.txt $(DEST_DIR)
 	@echo "Cleaned."
 
 $(addsuffix .o, $(TARGET)): %.o: %.c %.h .mkdir.o

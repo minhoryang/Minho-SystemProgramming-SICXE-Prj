@@ -24,17 +24,20 @@ int main(){
 #endif
 
 char *Tokenizer(char* const line){
+	// XXX : Split words per Tokenizer_Separator.
 	char *i, *j, //*part,
 	     *result = (char *)calloc(Tokenizer_Max_Length, sizeof(char));
 	size_t len_result = 0;
 	bool is_found = false;
 
+	// XXX : PIPELINE!
 	j = Tokenizer_FindQuotes(line);
 	i = Tokenizer_NoComments(j); free(j);
 	j = Tokenizer_DeBlanks(i); free(i);
 	i = Tokenizer_NoSpecialChars(j); free(j);
 
-	for(j = i; *j != '\0'; j++){
+	// XXX : Split.
+	for(j = i; *j != '\0'; j++){  // for every line.
 		if(!is_found){
 			if(*j != Tokenizer_Separator){
 				is_found = true;  // part start + data

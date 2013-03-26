@@ -1,8 +1,10 @@
 #include <stdio.h>
+#include "core/argument.h"
 
 #ifdef argument_test
 int main(int argc, char *argv[]){
-	argument_file_opener(argc, argv);
+	FILE *fp = argument_file_opener(argc, argv);
+	fclose(fp);
 	return 0;
 }
 #endif
