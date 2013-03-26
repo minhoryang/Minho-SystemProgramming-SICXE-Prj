@@ -1,5 +1,5 @@
 SRC_DIR = ..
-TARGET = alloc debug hash hex list
+TARGET = alloc argument debug hash hex list
 PART_NAME = core
 
 build: $(addsuffix .o, $(TARGET))

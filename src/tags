@@ -13,7 +13,7 @@ PART_NAME	modules/makefile	/^PART_NAME = modules$/;"	m
 SRC_DIR	core/makefile	/^SRC_DIR = ..$/;"	m
 SRC_DIR	makefile	/^SRC_DIR = .$/;"	m
 SRC_DIR	modules/makefile	/^SRC_DIR = ..$/;"	m
-TARGET	core/makefile	/^TARGET = alloc debug hash hex list$/;"	m
+TARGET	core/makefile	/^TARGET = alloc argument debug hash hex list$/;"	m
 TARGET	makefile	/^TARGET = main$/;"	m
 TARGET	modules/makefile	/^TARGET = tokenizer$/;"	m
 TESTS_DIR	rules.mk	/^TESTS_DIR = $(DEST_DIR)\/tests$/;"	m
@@ -29,16 +29,19 @@ Tokenizer_Max_Length	modules/tokenizer.h	4;"	d
 Tokenizer_NoComments	modules/tokenizer.c	/^char *Tokenizer_NoComments(char* const line){$/;"	f
 Tokenizer_NoSpecialChars	modules/tokenizer.c	/^char *Tokenizer_NoSpecialChars(char * const line){$/;"	f
 Tokenizer_Separator	modules/tokenizer.h	3;"	d
+argument_file_opener	core/argument.c	/^FILE *argument_file_opener(int argc, char *argv[]){$/;"	f
 foreach	core/macro.h	1;"	d
 hex2int	core/hex.c	/^int hex2int(char* const hex){$/;"	f
 len_int	core/hex.c	/^size_t len_int(int in){$/;"	f
 main	core/alloc.c	/^int main(){$/;"	f
+main	core/argument.c	/^int main(int argc, char *argv[]){$/;"	f
 main	core/debug.c	/^int main(){$/;"	f
 main	core/hash.c	/^int main(){$/;"	f
 main	core/hex.c	/^int main(){$/;"	f
 main	core/list.c	/^int main(){$/;"	f
-main	main.c	/^int main(){$/;"	f
+main	main.c	/^int main(int argc, char *argv[]){$/;"	f
 main	modules/tokenizer.c	/^int main(){$/;"	f
+src_core_argument	core/argument.h	2;"	d
 src_core_hex	core/hex.h	2;"	d
 src_main	main.h	2;"	d
 src_modules_tokenizer	modules/tokenizer.h	2;"	d
