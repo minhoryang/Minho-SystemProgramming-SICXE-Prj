@@ -23,7 +23,8 @@
 	
 		while(fgets(line, Tokenizer_Max_Length, fin) != NULL){  // for every inputed lines,
 	#ifndef src_modules_tokenizer_deprecated
-			for(i = 0; i < (cnt = Tokenizer(line, (out = AllocToken()))); i++){  // Tokenizer works perfectly.
+			cnt = Tokenizer(line, (out = AllocToken()));  // Tokenizer works perfectly.
+			for(i = 0; i < cnt; i++){
 				fprintf(fout, "%s\n", out[i]);
 				printf("%s\n", out[i]);
 			}
