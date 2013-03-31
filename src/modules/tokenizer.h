@@ -9,7 +9,14 @@
 		char **parts;
 	}Quotes;
 
-	char *Tokenizer(char * const);
+	#ifndef src_modules_tokenizer_deprecated
+		size_t Tokenizer(char* const line, char **result);
+		char **AllocToken();
+		void DeAllocToken(char **token);
+	#else
+		char *Tokenizer(char * const);
+	#endif
+
 	char *Tokenizer_FindQuotes(char * const, Quotes *);
 	char *Tokenizer_NoComments(char * const);
 	char *Tokenizer_DeBlanks(char * const);

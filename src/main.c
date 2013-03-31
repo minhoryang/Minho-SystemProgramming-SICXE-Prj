@@ -8,6 +8,7 @@
 #include "modules/tokenizer.h"
 
 int main(int argc, char *argv[]){
+	/*
 	FILE *fin = argument_file_opener(argc, argv),  // open file.
 		 *fout = fopen("output.txt", "w");
 	char *line = (char *)calloc(Tokenizer_Max_Length, sizeof(char)), *out;
@@ -21,5 +22,6 @@ int main(int argc, char *argv[]){
 	free(line);  // cleanup.
 	fclose(fin);
 	fclose(fout);
+	*/
 	return 0;
 }

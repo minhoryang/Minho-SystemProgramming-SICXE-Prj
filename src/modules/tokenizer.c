@@ -14,12 +14,25 @@
 		// The main function for Test-driven development (TDD).
 		FILE *fin = argument_file_opener(argc, argv),  // open file.
 			 *fout = fopen("output.txt", "w");
+	#ifndef src_modules_tokenizer_deprecated
+		char *line = (char *)calloc(Tokenizer_Max_Length, sizeof(char)), **out;
+		size_t i, cnt;
+	#else
 		char *line = (char *)calloc(Tokenizer_Max_Length, sizeof(char)), *out;
+	#endif
 	
 		while(fgets(line, Tokenizer_Max_Length, fin) != NULL){  // for every inputed lines,
+	#ifndef src_modules_tokenizer_deprecated
+			for(i = 0; i < (cnt = Tokenizer(line, (out = AllocToken()))); i++){  // Tokenizer works perfectly.
+				fprintf(fout, "%s\n", out[i]);
+				printf("%s\n", out[i]);
+			}
+			DeAllocToken(out);
+	#else
 			fprintf(fout, "%s", (out = Tokenizer(line)));  // Tokenizer works perfectly.
 			printf("%s", out);
 			free(out);
+	#endif
 		}
 	
 		free(line);  // cleanup.
@@ -29,40 +42,93 @@
 	}
 #endif
 
-char *Tokenizer(char* const line){
-	// XXX : Split words per Tokenizer_Separator.
-	char *i, *j, //*part,
-	     *result = (char *)calloc(Tokenizer_Max_Length, sizeof(char));
-	size_t len_result = 0;
-	bool is_found = false;
+#ifndef src_modules_tokenizer_deprecated
+	size_t Tokenizer(char* const line, char **result){
+		// XXX : Split words per Tokenizer_Separator.
+		char *i, *j;  // PIPELINE variables.
+		size_t len_found = 0,
+			   len_result = 0;
+		bool is_found = false;
 
-	// XXX : PIPELINE!
-	Quotes *datas = AllocQuotes();
-	j = Tokenizer_FindQuotes(line, datas);
-	i = Tokenizer_NoComments(j); free(j);
-	j = Tokenizer_DeBlanks(i); free(i);
-	i = Tokenizer_FillQuotes(j, datas); free(j);
-	DeAllocQuotes(datas);
+		// XXX : PIPELINE!
+		Quotes *datas = AllocQuotes();
+		j = Tokenizer_FindQuotes(line, datas);
+		i = Tokenizer_NoComments(j); free(j);
+		j = Tokenizer_DeBlanks(i); free(i);
+		i = Tokenizer_FillQuotes(j, datas); free(j);
+		DeAllocQuotes(datas);
 
-	// XXX : Split.
-	for(j = i; *j != '\0'; j++){  // for every line.
-		if(!is_found){
-			if(*j != Tokenizer_Separator){
-				is_found = true;  // part start + data
-				result[len_result++] = *j;
-			}else{} // ignored.
-		}else{
-			if(*j == Tokenizer_Separator){
-				is_found = false;  // part end
-				result[len_result++] = '\n';
+		// XXX : Split.
+		for(j = i; *j != '\0'; j++){  // for every line.
+			if(!is_found){
+				if(*j != Tokenizer_Separator){
+					is_found = true;  // part start + data
+					result[len_result][len_found++] = *j;
+				}else{}  // ignored.
 			}else{
-				result[len_result++] = *j;  // part data
+				if(*j == Tokenizer_Separator){
+					is_found = false;  // part end
+					len_result++;
+					len_found = 0;
+				}else{
+					result[len_result][len_found++] = *j;
+				}
 			}
 		}
+
+		return len_result;
 	}
 
-	return result;
-}
+	char **AllocToken(){
+		char **token = (char **)calloc(Tokenizer_Max_Length, sizeof(char *));
+		size_t i;
+		for(i=0; i<Tokenizer_Max_Length; i++)
+			token[i] = (char *)calloc(Tokenizer_Max_Length, sizeof(char));
+		return token;
+	}
+
+	void DeAllocToken(char **token){
+		size_t i;
+		for(i=0; i<Tokenizer_Max_Length; i++)
+			free(token[i]);
+		free(token);
+	}
+#else
+	char *Tokenizer(char* const line){
+		// XXX : Split words per Tokenizer_Separator.
+		char *i, *j, //*part,
+		     *result = (char *)calloc(Tokenizer_Max_Length, sizeof(char));
+		size_t len_result = 0;
+		bool is_found = false;
+
+		// XXX : PIPELINE!
+		Quotes *datas = AllocQuotes();
+		j = Tokenizer_FindQuotes(line, datas);
+		i = Tokenizer_NoComments(j); free(j);
+		j = Tokenizer_DeBlanks(i); free(i);
+		i = Tokenizer_FillQuotes(j, datas); free(j);
+		DeAllocQuotes(datas);
+	
+		// XXX : Split.
+		for(j = i; *j != '\0'; j++){  // for every line.
+			if(!is_found){
+				if(*j != Tokenizer_Separator){
+					is_found = true;  // part start + data
+					result[len_result++] = *j;
+				}else{} // ignored.
+			}else{
+				if(*j == Tokenizer_Separator){
+					is_found = false;  // part end
+					result[len_result++] = '\n';
+				}else{
+					result[len_result++] = *j;  // part data
+				}
+			}
+		}
+	
+		return result;
+	}
+#endif
 
 char const Tokenizer_Allows[6] = {'#', '@', '.', '+', Tokenizer_Separator, Tokenizer_Quotes_Reservation};
 size_t const Tokenizer_Allows_Cnt = 6;
