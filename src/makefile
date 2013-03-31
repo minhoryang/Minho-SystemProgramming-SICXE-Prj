@@ -18,3 +18,4 @@ b.m build.modules: core
 
 
 include $(SRC_DIR)/rules.mk 
+#CFLAGS += -DDEBUG

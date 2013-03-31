@@ -1,5 +1,5 @@
 SRC_DIR = ..
-TARGET = tokenizer
+TARGET = tokenizer shell memory directory
 PART_NAME = modules
 TEST_INCLUDING = $(OBJS_DIR)/core/*.o
 

@@ -8,22 +8,25 @@
 #include "modules/tokenizer.h"
 
 #ifdef tokenizer_test
-int main(){
-	// The main function for Test-driven development (TDD).
-	char *s, *o = "hello  X'123' world  T'   c'Ei OF' world\t.comment C'123'";
+	#include "core/argument.h"
 
-	printf("%s\n", Tokenizer(o));
-	printf("<    %s\n", o);
-	Quotes *datas = AllocQuotes();
-	printf(">    %s\n", (s = Tokenizer_FindQuotes(o, datas)));
-	printf(">>   %s\n", (o = Tokenizer_NoComments(s))); free(s);
-	printf(">>>  %s\n", (s = Tokenizer_DeBlanks(o))); free(o);
-	printf(">>>> %s\n", (o = Tokenizer_FillQuotes(s, datas))); free(s);
-	DeAllocQuotes(datas);
-	free(s);
-
-	return 0;
-}
+	int main(int argc, char *argv[]){
+		// The main function for Test-driven development (TDD).
+		FILE *fin = argument_file_opener(argc, argv),  // open file.
+			 *fout = fopen("output.txt", "w");
+		char *line = (char *)calloc(Tokenizer_Max_Length, sizeof(char)), *out;
+	
+		while(fgets(line, Tokenizer_Max_Length, fin) != NULL){  // for every inputed lines,
+			fprintf(fout, "%s", (out = Tokenizer(line)));  // Tokenizer works perfectly.
+			printf("%s", out);
+			free(out);
+		}
+	
+		free(line);  // cleanup.
+		fclose(fin);
+		fclose(fout);
+		return 0;
+	}
 #endif
 
 char *Tokenizer(char* const line){

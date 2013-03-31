@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include "main.h"
 #include "core/argument.h"
+#include "core/debug.h"
 #include "modules/tokenizer.h"
 
 int main(int argc, char *argv[]){
