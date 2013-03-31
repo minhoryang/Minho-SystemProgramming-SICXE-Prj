@@ -8,41 +8,42 @@
 
 #ifdef directory_test
 	int main(){
-	    struct dirent **items; 
-		int i, enter,  // loop variables.
-			nitems = scandir(".", &items, NULL, alphasort);  // Get the list of alphabet-sorted elements in 'current directory' at **items. 
-
-		for (i = 0, enter = 0; i < nitems; i++, enter++){  // foreach **items:
-
-			// Ignore hidden files, dirs.
-			if(items[i]->d_name[0] ==  '.'){
-				enter--;
-				continue;
-			}
-
-			// Print name:
-			printf("%s", items[i]->d_name);
-
-			// Check whether directory or executable file:
-			{
-				struct stat mystat;
-				lstat(items[i]->d_name, &mystat);  // Get the status of 'current element'.
-				if(S_ISDIR(mystat.st_mode))
-					printf("/");
-				else if((mystat.st_mode & S_IXUSR))
-					printf("*");
-			}
-
-			// Print 'divide char':
-			if((enter + 1)%3)
-				printf("\t");
-			else
-				printf("\n");
-		}
-
-		free(items);
+		directory_print(".");
 		return 0;
 	}
 #endif
 
+void directory_print(char * const directory){
+	struct dirent **items; 
+	int i, enter,  // loop variables.
+		nitems = scandir(directory, &items, NULL, alphasort);  // Get the list of alphabet-sorted elements in *directory to **items. 
 
+	for (i = 0, enter = 0; i < nitems; i++, enter++){  // foreach **items:
+		// Ignore hidden files, dirs.
+		if(items[i]->d_name[0] ==  '.'){
+			enter--;
+			continue;
+		}
+
+		// Print name:
+		printf("%s", items[i]->d_name);
+
+		// Check whether directory or executable file:
+		{
+			struct stat mystat;
+			lstat(items[i]->d_name, &mystat);  // Get the status of 'current element'.
+			if(S_ISDIR(mystat.st_mode))
+				printf("/");
+			else if((mystat.st_mode & S_IXUSR))
+				printf("*");
+		}
+
+		// Print 'divide char':
+		if((enter + 1)%3)
+			printf("\t");
+		else
+			printf("\n");
+	}
+
+	free(items);
+}
