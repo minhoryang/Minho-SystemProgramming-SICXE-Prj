@@ -68,9 +68,12 @@
 				}else{}  // ignored.
 			}else{
 				if(*j == Tokenizer_Separator){
-					is_found = false;  // part end
-					len_result++;
-					len_found = 0;
+					result[len_result][len_found++] = NULL;
+					{
+						is_found = false;  // part end
+						len_result++;
+						len_found = 0;
+					}
 				}else{
 					result[len_result][len_found++] = *j;
 				}
