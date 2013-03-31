@@ -1,7 +1,14 @@
 #ifndef src_modules_shell
 	#define src_modules_shell
 
-	void *Shell_AllocateEnvironment();
-	void Shell_DeAllocateEnvironment(void *environment);
-	int Shell_MainLoop(void *environment);
+	typedef struct {
+		char *line;
+		char **tokens;
+		size_t len_token;
+		FILE *fin;
+	}Environment;
+
+	Environment *Shell_AllocateEnvironment();
+	void Shell_DeAllocateEnvironment(Environment *);
+	int Shell_MainLoop(Environment *);
 #endif
