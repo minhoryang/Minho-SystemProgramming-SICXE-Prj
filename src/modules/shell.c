@@ -35,9 +35,21 @@ int Shell_MainLoop(Environment *env){
 	{
 		size_t i;
 		fgets(env->line, Tokenizer_Max_Length, env->fin);
-		for(i = 0; i < 0; i++){
-			;
+		env->len_token = Tokenizer(env->line, env->tokens);
+		for(i = 0; i < env->len_token; i++){
+			printf("%s\n", env->tokens[i]);
 		}
+		/*
+		switch(env->tokens[0]){
+			case "quit":
+			case "q":
+				return 0;
+				break;
+			default:
+				break;
+		}
+		*/
 	}
 	return !0;
 }
+
