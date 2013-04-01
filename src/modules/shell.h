@@ -6,6 +6,7 @@
 		char **tokens;
 		size_t len_token;
 		FILE *fin;
+		StringSwitchSet *cmds;
 	}Environment;
 
 	Environment *Shell_AllocateEnvironment();

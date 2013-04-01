@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "core/stringswitch.h"
 #include "modules/shell.h"
 #include "modules/tokenizer.h"
 
@@ -18,13 +19,16 @@
 #endif
 
 Environment *Shell_AllocateEnvironment(){
+	char *cmds[] = {"quit", "q"};
 	Environment *env = (Environment *)calloc(1, sizeof(Environment));
 	env->line = (char *)calloc(Tokenizer_Max_Length, sizeof(char));
 	env->tokens = AllocToken();
+	env->cmds = AllocStringSwitchSet(cmds, 2);
 	return env;
 }
 
 void Shell_DeAllocateEnvironment(Environment *env){
+	DeAllocStringSwitchSet(env->cmds);
 	DeAllocToken(env->tokens);
 	free(env->line);
 	free(env);
@@ -33,22 +37,16 @@ void Shell_DeAllocateEnvironment(Environment *env){
 int Shell_MainLoop(Environment *env){
 	printf("sicsim> ");
 	{
-		size_t i;
 		fgets(env->line, Tokenizer_Max_Length, env->fin);
 		env->len_token = Tokenizer(env->line, env->tokens);
-		for(i = 0; i < env->len_token; i++){
-			printf("%s\n", env->tokens[i]);
-		}
-		/*
-		switch(env->tokens[0]){
-			case "quit":
-			case "q":
+		StringSwitch(env->cmds, env->tokens[0]){
+			case 0:  // "quit"
+			case 1:  // "q"
 				return 0;
 				break;
 			default:
 				break;
 		}
-		*/
 	}
 	return !0;
 }
