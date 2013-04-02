@@ -68,3 +68,7 @@ struct list_elem *list_pop_back(struct list *list){
 	list_remove(back);
 	return back;
 }
+
+bool list_empty(struct list *list){
+	return list_begin(list) == list_end(list);
+}

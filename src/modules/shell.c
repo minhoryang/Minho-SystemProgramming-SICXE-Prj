@@ -8,9 +8,15 @@
 #include "modules/directory.h"
 #include "modules/memory.h"
 #include "modules/history.h"
+#include "modules/optab.h"
 
 #ifdef shell_test
 	#include "core/argument.h"
+	#include "modules/tokenizer.c"
+	#include "modules/directory.c"
+	#include "modules/memory.c"
+	#include "modules/history.c"
+	#include "modules/optab.c"
 
 	int main(int argc, char *argv[]){
 		// The main function for Test-driven development (TDD).
@@ -53,10 +59,17 @@ Environment *Shell_AllocateEnvironment(){
 		env->history = (struct list *)calloc(1, sizeof(struct list));
 		list_init((env->history));
 	}
+	{
+		env->OP = OP_Alloc();
+		env->MN = MN_Alloc();
+		OPMN_Load(env->OP, env->MN);
+	}
 	return env;
 }
 
 void Shell_DeAllocateEnvironment(Environment *env){
+	hash_destroy(env->OP, both_hash_destructor);
+	hash_destroy(env->MN, NULL);
 	History_DeAlloc(env->history);
 	DeAllocStringSwitchSet(env->cmds);
 	DeAllocToken(env->tokens);
@@ -148,12 +161,22 @@ int Shell_MainLoop(Environment *env){
 					Shell_Exception(env);
 				break;
 			case 15:  // "opcode"
+				if(env->len_token == 2){
+					OP_Search(env->MN, env->tokens[1]);
+				}else
+					Shell_Exception(env);
 				break;
 			case 16:  // "mnemonic"
+				if(env->len_token == 2){
+					MN_Search(env->OP, env->tokens[1]); 
+				}else
+					Shell_Exception(env);
 				break;
 			case 17:  // "opcodelist"
+				OP_List(env->OP);
 				break;
 			case 18:  // "mnemoniclist"
+				MN_List(env->MN);
 				break;
 			default:
 				Shell_Exception(env);
@@ -177,7 +200,8 @@ void Shell_Help(){
 	printf("e[dir] address, value\n");
 	printf("f[ill] start, end, value\n");
 	printf("reset\n");
-	printf("opcode mnemonic\n");
+	printf("opcode\n");
+	printf("mnemonic\n");
 	printf("opcodelist\n");
 	printf("mnemoniclist\n");
 }

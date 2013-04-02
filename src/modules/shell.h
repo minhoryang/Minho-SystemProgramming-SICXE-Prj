@@ -3,14 +3,14 @@
 
 	#include <stdbool.h>
 	#include "core/list.h"
+	#include "core/hash.h"
 	#include "core/stringswitch.h"
 
 	typedef struct {
 		// Argument.h
 		FILE *fin;
 		// Tokenizer.h
-		char *line;
-		char **tokens;
+		char *line, **tokens;
 		size_t len_token;
 		// StringSwitch.h
 		StringSwitchSet *cmds;
@@ -19,6 +19,9 @@
 		size_t loc_memory;
 		// list.h for history.
 		List *history;
+		// hash.h for OPTab, MNTab.
+		Hash *OP, *MN;
+		//
 		bool was_clear;
 	}Environment;
 
