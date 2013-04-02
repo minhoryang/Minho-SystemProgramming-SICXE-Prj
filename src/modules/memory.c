@@ -7,7 +7,7 @@
 
 #ifdef memory_test
 int main(){
-	char *memory = (char *)calloc(MEM_MAX, sizeof(char));
+	unsigned char *memory = (unsigned char *)calloc(MEM_MAX, sizeof(unsigned char));
 	size_t prev = 0;
 	memory_edit(memory, 4, hex2int("6D"));
 	memory_fill(memory, hex2int("24"), hex2int("34"), hex2int("2A"));
@@ -24,10 +24,8 @@ size_t memory_dump(void *memory, size_t start, size_t end){
 	// XXX : Dump *memory from 'start' to 'end'.
 
 	// Validating start-end.
-	if(start < MEM_MIN)
-		start = MEM_MIN;
-	if(MEM_MAX < end)
-		end = MEM_MIN;
+	if((start < MEM_MIN) || (MEM_MAX < end))
+		return 0;
 
 	// Printing those things:
 	size_t base, x;
@@ -37,7 +35,7 @@ size_t memory_dump(void *memory, size_t start, size_t end){
 		// B. Hex Data.
 		for(x=base; x<base+16; x++){
 			if(!(x < start) && !(end < x))  // Check if 'x' is between start and end.
-				printf(" %02X", *(char *)(memory + x));
+				printf(" %02X", *(unsigned char *)(memory + x));
 			else
 				printf("   ");
 		}
@@ -46,8 +44,8 @@ size_t memory_dump(void *memory, size_t start, size_t end){
 		// D. ASCII code.
 		for(x=base; x<base+16; x++){
 			if(!(x < start) && !(end < x)){  // Check if 'x' is between start and end.
-				if((32 <= *(char *)(memory + x)) && (*(char *)(memory + x) <= 126))  // Check if is Printable.
-					printf("%c", *(char *)(memory + x));
+				if((32 <= *(unsigned char *)(memory + x)) && (*(unsigned char *)(memory + x) <= 126))  // Check if is Printable.
+					printf("%c", *(unsigned char *)(memory + x));
 				else
 					printf(".");
 			}else
@@ -57,17 +55,17 @@ size_t memory_dump(void *memory, size_t start, size_t end){
 		printf("\n");
 	}
 
-	return end-start;  // the size of printed data areas.
+	return end;
 }
 
-bool memory_edit(void *memory, size_t address, int value){
+bool memory_edit(void *memory, size_t address, size_t value){
 	if((address < MEM_MIN) || (MEM_MAX < address))
 		return false;
-	*(char *)(memory+address) = value;
+	*(unsigned char *)(memory+address) = value;
 	return true;
 }
 
-bool memory_fill(void *memory, size_t start, size_t end, int value){
+bool memory_fill(void *memory, size_t start, size_t end, size_t value){
 	// Validating start-end.
 	if((start < MEM_MIN) || (MEM_MAX < end))
 		return false;
@@ -80,5 +78,5 @@ bool memory_fill(void *memory, size_t start, size_t end, int value){
 }
 
 void memory_reset(void *memory){
-	memset(memory, 0, MEM_MAX * sizeof(char));
+	memset(memory, 0, MEM_MAX * sizeof(unsigned char));
 }

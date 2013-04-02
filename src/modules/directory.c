@@ -8,13 +8,13 @@
 
 #ifdef directory_test
 	int main(){
-		directory_print(".");
+		Directory_Print(".");
 		return 0;
 	}
 #endif
 
-void directory_print(char * const directory){
-	struct dirent **items; 
+void Directory_Print(char * const directory){
+	struct dirent **items = NULL; 
 	int i, enter,  // loop variables.
 		nitems = scandir(directory, &items, NULL, alphasort);  // Get the list of alphabet-sorted elements in *directory to **items. 
 
@@ -45,5 +45,9 @@ void directory_print(char * const directory){
 			printf("\n");
 	}
 
-	free(items);
+	if((enter)%3)
+		printf("\n");
+
+	if(items != NULL)
+		free(items);
 }
