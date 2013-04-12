@@ -1,6 +1,6 @@
 #ifndef src_modules_tokenizer
 	#define src_modules_tokenizer
-	#define Tokenizer_Separator '!'
+	#define Tokenizer_Separator 13  // XXX [FIXED] '!' will fail, when input includes this. Replace to normally un used char : CarrageReturn.
 	#define Tokenizer_Quotes_Reservation '$'
 	#define Tokenizer_Max_Length 100
 

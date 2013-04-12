@@ -161,9 +161,17 @@ char *Tokenizer_FindQuotes(char* const line, Quotes *datas){
 				switch(*before){  // A-1-a. Get type of quotes.
 					case 'X': case 'x':
 						type_found = hexs;
+						{  // XXX [FIXED] 'X' have to print also.
+							result[len_result++] = *before;
+							result[len_result++] = Tokenizer_Separator;
+						}
 						break;
 					case 'C': case 'c':
 						type_found = chars;
+						{  // XXX [FIXED] 'C' have to print also.
+							result[len_result++] = *before;
+							result[len_result++] = Tokenizer_Separator;
+						}
 						break;
 					default:  // A-1-b. Failed, then
 						{  // <Reset flags>
