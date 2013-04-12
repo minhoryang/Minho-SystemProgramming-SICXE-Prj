@@ -1,10 +1,10 @@
 SRC_DIR = .
-TARGET = main
+TARGET = 20091631
 ARGUMENTS = $(filter-out b.c build.core b.m build.modules, $(MAKECMDGOALS))
 
 .PHONY: build
-build: build.core build.modules main.o
-	gcc -o $(DEST_DIR)/20091631.out $(OBJS_DIR)/*/*.o $(OBJS_DIR)/main.o
+build: build.core build.modules 20091631.o
+	gcc -o $(DEST_DIR)/20091631.out $(OBJS_DIR)/*/*.o $(OBJS_DIR)/20091631.o
 	@cp $(DEST_DIR)/20091631.out $(DEST_DIR)/../20091631.out
 
 .PHONY: tests
