@@ -1,4 +1,4 @@
-DEST_DIR = $(SRC_DIR)/../built
+DEST_DIR = $(SRC_DIR)/built
 OBJS_DIR = $(DEST_DIR)/objs
 TESTS_DIR = $(DEST_DIR)/tests
 CFLAGS = -I$(SRC_DIR) -Wall
