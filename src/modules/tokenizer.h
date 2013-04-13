@@ -10,7 +10,7 @@
 	}Quotes;
 
 	#ifndef src_modules_tokenizer_deprecated
-		size_t Tokenizer(char* const line, char **result);
+		size_t Tokenizer(char* const line, char **result, bool pipe);
 		char **AllocToken();
 		void DeAllocToken(char **token);
 	#else

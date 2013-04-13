@@ -48,8 +48,12 @@ Environment *Shell_AllocateEnvironment(){
 			"opcode",
 			"mnemonic",
 			"opcodelist",
-			"mnemoniclist"};
-		env->cmds = AllocStringSwitchSet(cmds, 19);
+			"mnemoniclist",
+			"assemble",
+			"type",
+			"symbol",
+			"disassemble"};
+		env->cmds = AllocStringSwitchSet(cmds, 23);
 	}
 	{
 		env->memory = (unsigned char *)calloc(MEM_MAX, sizeof(unsigned char));
@@ -89,7 +93,7 @@ int Shell_MainLoop(Environment *env){
 	// Handler
 	{
 		fgets(env->line, Tokenizer_Max_Length, env->fin);
-		env->len_token = Tokenizer(env->line, env->tokens);
+		env->len_token = Tokenizer(env->line, env->tokens, false);
 		StringSwitch(env->cmds, env->tokens[0]){
 			case 0:  // "help"
 			case 1:  // "h"
@@ -178,6 +182,12 @@ int Shell_MainLoop(Environment *env){
 			case 18:  // "mnemoniclist"
 				MN_List(env->MN);
 				break;
+			case 20:  // "type"
+				if(env->len_token == 2){
+					Directory_File_View(env->tokens[1]);
+				}else
+					Shell_Exception(env);
+				break;
 			default:
 				Shell_Exception(env);
 				break;
@@ -204,6 +214,10 @@ void Shell_Help(){
 	printf("mnemonic\n");
 	printf("opcodelist\n");
 	printf("mnemoniclist\n");
+	printf("assemble\n");
+	printf("type\n");
+	printf("symbol\n");
+	printf("disassemble\n");
 }
 
 void Shell_Exception(Environment *env){

@@ -9,6 +9,7 @@
 #ifdef directory_test
 	int main(){
 		Directory_Print(".");
+		//Directory_File_View("test.txt");
 		return 0;
 	}
 #endif
@@ -50,4 +51,17 @@ void Directory_Print(char * const directory){
 
 	if(items != NULL)
 		free(items);
+}
+
+void Directory_File_View(char * const file){
+	FILE *fp = fopen(file, "r");
+	if(fp == NULL){
+		printf("err!\n");
+		return ;
+	}
+	int b, ch;
+	for(b = '\n'; (ch = getc(fp)) != EOF; b = ch)
+		putchar(b);
+	putchar(b);
+	fclose(fp);
 }

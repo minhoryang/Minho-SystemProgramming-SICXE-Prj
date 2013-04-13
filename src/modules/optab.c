@@ -94,7 +94,7 @@ void OPMN_Load(Hash *OP, Hash *MN){
 	char *line = (char *)calloc(Tokenizer_Max_Length, sizeof(char)), **out;
 	size_t cnt;
 	while(fgets(line, Tokenizer_Max_Length, fp) != NULL){
-		if((cnt = Tokenizer(line, (out = AllocToken())))){
+		if((cnt = Tokenizer(line, (out = AllocToken()), false))){
 			//printf("%lu %s %s %s\n", cnt, out[0], out[1], out[2]); 
 			OPMN_Insert(OP, MN, out[0], out[1]);
 		}

@@ -23,7 +23,7 @@
 	
 		while(fgets(line, Tokenizer_Max_Length, fin) != NULL){  // for every inputed lines,
 	#ifndef src_modules_tokenizer_deprecated
-			cnt = Tokenizer(line, (out = AllocToken()));  // Tokenizer works perfectly.
+			cnt = Tokenizer(line, (out = AllocToken()), true);  // Tokenizer works perfectly.
 			for(i = 0; i < cnt; i++){
 				fprintf(fout, "%s\n", out[i]);
 				printf("%s\n", out[i]);
@@ -44,20 +44,24 @@
 #endif
 
 #ifndef src_modules_tokenizer_deprecated
-	size_t Tokenizer(char* const line, char **result){
+	size_t Tokenizer(char* const line, char **result, bool pipe){
 		// XXX : Split words per Tokenizer_Separator.
 		char *i, *j;  // PIPELINE variables.
 		size_t len_found = 0,
 			   len_result = 0;
 		bool is_found = false;
 
-		// XXX : PIPELINE!
-		Quotes *datas = AllocQuotes();
-		j = Tokenizer_FindQuotes(line, datas);
-		i = Tokenizer_NoComments(j); free(j);
-		j = Tokenizer_DeBlanks(i); free(i);
-		i = Tokenizer_FillQuotes(j, datas); free(j);
-		DeAllocQuotes(datas);
+		if(pipe){
+			// XXX : PIPELINE!
+			Quotes *datas = AllocQuotes();
+			j = Tokenizer_FindQuotes(line, datas);
+			i = Tokenizer_NoComments(j); free(j);
+			j = Tokenizer_DeBlanks(i); free(i);
+			i = Tokenizer_FillQuotes(j, datas); free(j);
+			DeAllocQuotes(datas);
+		}else{
+			i = Tokenizer_DeBlanks(line);
+		}
 
 		// XXX : Split.
 		for(j = i; *j != '\0'; j++){  // for every line.
@@ -80,6 +84,7 @@
 			}
 		}
 
+		free(i);
 		return len_result;
 	}
 
