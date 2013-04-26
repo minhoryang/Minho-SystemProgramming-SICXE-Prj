@@ -113,11 +113,12 @@ void OPMN_Insert(Hash *OP, Hash *MN, char *opcode, char *mnemonic){
 }
 
 void OP_List(Hash *what){
-	size_t i;
+	size_t i, t = 1;
 	for(i = 0; i < what->bucket_cnt; i++){
-		printf("%lu : ", i + 1);
-		bool arrow = false;
-		if(i < what->bucket_cnt){
+		if(i && (i % 4 == 0))  printf("%lu : \n", i + t++);
+		printf("%lu : ", i + t);
+		{
+			bool arrow = false;
 			List *now = &what->buckets[i];
 			Elem *find;
 			for(find = list_begin(now);
@@ -133,12 +134,14 @@ void OP_List(Hash *what){
 		}
 		printf("\n");
 	}
+	printf("%lu : \n", i + t++);
 }
 
 void MN_List(Hash *what){
-	size_t i;
+	size_t i, t = 1;
 	for(i = 0; i < what->bucket_cnt; i++){
-		printf("%lu : ", i + 1);
+		if(i && (i % 4 == 0))  printf("%lu : \n", i + t++);
+		printf("%lu : ", i + t);
 		{
 			bool arrow = false;
 			List *now = &what->buckets[i];
@@ -154,9 +157,9 @@ void MN_List(Hash *what){
 				printf("[%s,%2X]", realthis->mnemonic, realthis->opcode);
 			}
 		}
-
 		printf("\n");
 	}
+	printf("%lu : \n", i + t++);
 }
 
 void MN_Search(Hash *what, char *mnemonic){
