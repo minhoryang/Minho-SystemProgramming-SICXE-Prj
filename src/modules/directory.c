@@ -9,7 +9,7 @@
 #ifdef directory_test
 	int main(){
 		Directory_Print(".");
-		//Directory_File_View("test.txt");
+		//Directory_File_Type("test.txt");
 		return 0;
 	}
 #endif
@@ -53,7 +53,7 @@ void Directory_Print(char * const directory){
 		free(items);
 }
 
-void Directory_File_View(char * const file){
+void Directory_File_Type(char * const file){
 	FILE *fp = fopen(file, "r");
 	if(fp == NULL){
 		printf("err!\n");

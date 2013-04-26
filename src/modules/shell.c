@@ -184,7 +184,7 @@ int Shell_MainLoop(Environment *env){
 				break;
 			case 20:  // "type"
 				if(env->len_token == 2){
-					Directory_File_View(env->tokens[1]);
+					Directory_File_Type(env->tokens[1]);
 				}else
 					Shell_Exception(env);
 				break;
