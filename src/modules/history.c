@@ -11,11 +11,11 @@
 	}
 #endif
 
-void History_Add(Environment *env){
+void History_Add(char *in, List *h){
 	History *new = (History *)calloc(1, sizeof(History));
 	new->line = (char *)calloc(Tokenizer_Max_Length, sizeof(char));
-	strncpy(new->line, env->line, strlen(env->line));
-	list_push_back(env->history, &new->elem);
+	strncpy(new->line, in, strlen(in));
+	list_push_back(h, &new->elem);
 }
 
 void History_View(List *h){

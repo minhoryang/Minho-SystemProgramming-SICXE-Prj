@@ -196,7 +196,7 @@ int Shell_MainLoop(Environment *env){
 
 	// done.
 	if(env->was_clear){
-		History_Add(env);
+		History_Add(env->line, env->history);
 	}
 	return !0;
 }

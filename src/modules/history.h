@@ -9,7 +9,7 @@
 		Elem elem;
 	}History;
 
-	void History_Add(Environment *);
+	void History_Add(char *, List *);
 	void History_View(List *);
 	void History_DeAlloc(List *);
 #endif
