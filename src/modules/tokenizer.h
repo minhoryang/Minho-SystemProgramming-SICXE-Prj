@@ -22,6 +22,7 @@
 	char *Tokenizer_DeBlanks(char * const);
 	char *Tokenizer_NoSpecialChars(char * const line);
 	char *Tokenizer_FillQuotes(char * const, Quotes *);
+	char *Tokenizer_NoEnter(char* const line);
 
 	Quotes *AllocQuotes();
 	void DeAllocQuotes(Quotes *in);

@@ -9,6 +9,7 @@
 
 #ifdef tokenizer_test
 	#include "core/argument.h"
+	#define src_modules_tokenizer_ignore_changes_for_assembler
 
 	int main(int argc, char *argv[]){
 		// The main function for Test-driven development (TDD).
@@ -167,14 +168,14 @@ char *Tokenizer_FindQuotes(char* const line, Quotes *datas){
 					case 'X': case 'x':
 						type_found = hexs;
 						{  // XXX [FIXED] 'X' have to print also.
-							result[len_result++] = *before;
+							//result[len_result++] = *before;  // XXX [FIXED][AGAIN] 'X' no need to print!
 							result[len_result++] = Tokenizer_Separator;
 						}
 						break;
 					case 'C': case 'c':
 						type_found = chars;
 						{  // XXX [FIXED] 'C' have to print also.
-							result[len_result++] = *before;
+							//result[len_result++] = *before;  // XXX [FIXED][AGAIN] 'C' no need to print!
 							result[len_result++] = Tokenizer_Separator;
 						}
 						break;
@@ -207,11 +208,25 @@ char *Tokenizer_FindQuotes(char* const line, Quotes *datas){
 			if(*now != '\''){
 				found[len_found++] = *now;  // B-1. DATA Area.
 			}else{
+#ifndef src_modules_tokenizer_ignore_changes_for_assembler
+				char *new;
+				size_t len_new, l;
+#endif
 				switch(type_found){  // B-2. Successfully got the data.
 					case hexs:  // B-2-a. for hex: converting.
+#ifdef src_modules_tokenizer_ignore_changes_for_assembler
 						sprintf(found, "%d", hex2int(found));
+#endif
 						break;
 					case chars:  // B-2-b. for char.
+#ifndef src_modules_tokenizer_ignore_changes_for_assembler
+						new = (char *)calloc(Tokenizer_Max_Length, sizeof(char));
+						len_new = strlen(found);
+						for(l=0;l<len_new;l++)
+							sprintf(new + l * 2, "%02X", found[l]);
+						free(found);
+						found = new;
+#endif
 						break;
 				}
 				// B-2-c. Store 'found' data to '(Quotes *)datas'!
@@ -388,6 +403,22 @@ char *Tokenizer_FillQuotes(char * const line, Quotes *datas){
 	free(filter);
 	return result;
 }
+
+char *Tokenizer_NoEnter(char* const line){
+	// XXX : Delete all chars between '.' and '/n'.
+	char *now,
+         *result = (char *)calloc(Tokenizer_Max_Length, sizeof(char));
+	size_t len_result = 0;
+
+	for(now = line; *now != '\0'; now++){  // for every letters..
+		if(*now != '\n'){  // if find .dot, mission complete!
+			result[len_result++] = *now;  // safely copy it.
+		}
+	}
+	result[len_result++] = Tokenizer_Separator;
+	return result;
+}
+
 
 Quotes *AllocQuotes(){  // Allocate Quote DB.
 	Quotes *s = (Quotes *)calloc(1, sizeof(Quotes));
