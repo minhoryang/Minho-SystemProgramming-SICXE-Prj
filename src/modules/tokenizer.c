@@ -376,6 +376,7 @@ char *Tokenizer_FillQuotes(char * const line, Quotes *datas){
 				for(s=0;s<strlen(datas->parts[cnt]);s++){
 					result[len_result++] = datas->parts[cnt][s];
 				}
+				result[len_result++] = Tokenizer_Separator;  // XXX FIXED) EOF missing.
 			}
 			
 		}else{
