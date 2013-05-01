@@ -329,6 +329,7 @@ char *Tokenizer_DeBlanks(char* const line){
 			}
 		}
 	}
+	result[len_result++] = Tokenizer_Separator;  // XXX [PATCH] When 1 words entered, cnt=0. but should be cnt=1. 
 	return result;
 }
 
@@ -405,17 +406,15 @@ char *Tokenizer_FillQuotes(char * const line, Quotes *datas){
 }
 
 char *Tokenizer_NoEnter(char* const line){
-	// XXX : Delete all chars between '.' and '/n'.
 	char *now,
          *result = (char *)calloc(Tokenizer_Max_Length, sizeof(char));
 	size_t len_result = 0;
 
 	for(now = line; *now != '\0'; now++){  // for every letters..
-		if(*now != '\n'){  // if find .dot, mission complete!
+		if((*now != '\n') && (*now != '\r')){
 			result[len_result++] = *now;  // safely copy it.
 		}
 	}
-	result[len_result++] = Tokenizer_Separator;
 	return result;
 }
 
