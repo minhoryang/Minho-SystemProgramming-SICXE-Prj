@@ -164,9 +164,9 @@ int Shell_MainLoop(Environment *env){
 				}else
 					Shell_Exception(env);
 				break;
-			case 15:  // "opcode"
+			case 15:  // "opcode want-to-find-mnemonic"
 				if(env->len_token == 2){
-					OPMNNode *find = MN_Search(env->OP, env->tokens[1]);  // TODO UPPER WORKS ONLY!
+					OPMNNode *find = MN_Search(env->OP, env->tokens[1]);
 					if(find != NULL)
 						printf("opcode is %02X.\n", find->opcode);
 					else
@@ -174,7 +174,7 @@ int Shell_MainLoop(Environment *env){
 				}else
 					Shell_Exception(env);
 				break;
-			case 16:  // "mnemonic"
+			case 16:  // "mnemonic want-to-find-opcode"
 				if(env->len_token == 2){
 					OPMNNode *find = OP_Search(env->MN, env->tokens[1]);
 					if(find != NULL)

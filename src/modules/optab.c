@@ -201,8 +201,8 @@ OPMNNode *MN_Search(Hash *what, char *mnemonic){
 				find = list_next(find)){
 				HElem *this = Elem2HElem(find);
 				OPMNNode *realthis = hash_entry(this, OPMNNode, op_elem);
-				if(strcmp(realthis->mnemonic, mnemonic) == 0){
-					return realthis;
+				if(strcasecmp(realthis->mnemonic, mnemonic) == 0){  // XXX FIXED : Added lower.
+					return realthis;  // XXX FIXED : return OPMNNode *.
 				}
 			}
 		}
@@ -223,7 +223,7 @@ OPMNNode *OP_Search(Hash *what, char *opcode){
 				HElem *this = Elem2HElem(find);
 				OPMNNode *realthis = hash_entry(this, OPMNNode, mn_elem);
 				if(realthis->opcode == hex2int(opcode)){
-					return realthis;
+					return realthis;  // XXX FIXED : return OPMNNode *.
 				}
 			}
 		}
