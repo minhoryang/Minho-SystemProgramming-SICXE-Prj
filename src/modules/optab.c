@@ -95,8 +95,24 @@ void OPMN_Load(Hash *OP, Hash *MN){
 	size_t cnt;
 	while(fgets(line, Tokenizer_Max_Length, fp) != NULL){
 		if((cnt = Tokenizer(line, (out = AllocToken()), false))){
-			//printf("%lu %s %s %s\n", cnt, out[0], out[1], out[2]); 
-			OPMN_Insert(OP, MN, out[0], out[1]);
+			bool formats[4] = {false,};
+			{  // OPCODE FORMAT HANDLER!
+				int a[4] = {0,},
+					n = sscanf(out[2],
+							"%d%*c%d%*c%d%*c%d",  // RULES
+							&a[0], &a[1], &a[2], &a[3]);
+				{
+					int i;
+					for (i=0;i<n;i++)
+						if(1 <= a[i] && a[i] <= 4)
+							formats[a[i]-1] = true;
+				}
+				if(0)  // TODO(DEBUG)
+					printf("%lu %s %s (%d : %d %d %d %d)\n",
+						cnt, out[0], out[1],
+						n, a[0], a[1], a[2], a[3]);
+			}
+			OPMN_Insert(OP, MN, out[0], out[1], formats);
 		}
 		DeAllocToken(out);
 	}
@@ -104,12 +120,24 @@ void OPMN_Load(Hash *OP, Hash *MN){
 	fclose(fp);
 }
 
-void OPMN_Insert(Hash *OP, Hash *MN, char *opcode, char *mnemonic){
+void OPMN_Insert(Hash *OP, Hash *MN, char *opcode, char *mnemonic, bool *formats){
 	OPMNNode *new = (OPMNNode *)calloc(1, sizeof(OPMNNode));
 	strncpy(new->mnemonic, mnemonic, strlen(mnemonic));
 	new->opcode = hex2int(opcode);
-	hash_insert(OP, &new->op_elem);
-	hash_insert(MN, &new->mn_elem);
+	if(0)  // TODO(DEBUG)
+		printf("%s %s %s %s\n",
+			formats[0] ? "true" : "false",
+			formats[1] ? "true" : "false",
+			formats[2] ? "true" : "false",
+			formats[3] ? "true" : "false");
+	new->can_format[0] = formats[0];
+	new->can_format[1] = formats[1];
+	new->can_format[2] = formats[2];
+	new->can_format[3] = formats[3];
+	if(OP != NULL)
+		hash_insert(OP, &new->op_elem);
+	if(MN != NULL)
+		hash_insert(MN, &new->mn_elem);
 }
 
 void OP_List(Hash *what){
@@ -162,7 +190,7 @@ void MN_List(Hash *what){
 	printf("%lu : \n", i + t++);
 }
 
-void MN_Search(Hash *what, char *mnemonic){
+OPMNNode *MN_Search(Hash *what, char *mnemonic){
 	size_t i;
 	for(i = 0; i < what->bucket_cnt; i++){
 		{
@@ -174,16 +202,16 @@ void MN_Search(Hash *what, char *mnemonic){
 				HElem *this = Elem2HElem(find);
 				OPMNNode *realthis = hash_entry(this, OPMNNode, op_elem);
 				if(strcmp(realthis->mnemonic, mnemonic) == 0){
-					printf("opcode is %2X.\n", realthis->opcode);
-					return ;
+					return realthis;
 				}
 			}
 		}
 
 	}
+	return NULL;
 }
 
-void OP_Search(Hash *what, char *opcode){
+OPMNNode *OP_Search(Hash *what, char *opcode){
 	size_t i;
 	for(i = 0; i < what->bucket_cnt; i++){
 		{
@@ -195,12 +223,11 @@ void OP_Search(Hash *what, char *opcode){
 				HElem *this = Elem2HElem(find);
 				OPMNNode *realthis = hash_entry(this, OPMNNode, mn_elem);
 				if(realthis->opcode == hex2int(opcode)){
-					printf("mnemonic is %s.\n", realthis->mnemonic);
-					return ;
+					return realthis;
 				}
 			}
 		}
-
 	}
+	return NULL;
 }
 

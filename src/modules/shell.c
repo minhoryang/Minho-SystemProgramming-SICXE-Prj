@@ -166,13 +166,21 @@ int Shell_MainLoop(Environment *env){
 				break;
 			case 15:  // "opcode"
 				if(env->len_token == 2){
-					OP_Search(env->MN, env->tokens[1]);
+					OPMNNode *find = MN_Search(env->OP, env->tokens[1]);  // TODO UPPER WORKS ONLY!
+					if(find != NULL)
+						printf("opcode is %02X.\n", find->opcode);
+					else
+						Shell_Exception(env);
 				}else
 					Shell_Exception(env);
 				break;
 			case 16:  // "mnemonic"
 				if(env->len_token == 2){
-					MN_Search(env->OP, env->tokens[1]); 
+					OPMNNode *find = OP_Search(env->MN, env->tokens[1]);
+					if(find != NULL)
+						printf("mnemonic is %s.\n", find->mnemonic);
+					else
+						Shell_Exception(env);
 				}else
 					Shell_Exception(env);
 				break;
