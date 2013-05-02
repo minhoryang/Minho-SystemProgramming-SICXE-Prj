@@ -5,14 +5,14 @@ CFLAGS = -I$(SRC_DIR) -Wall
 
 .PHONY: clean
 clean:
-	@rm -rf $(DEST_DIR)/../20091631.out $(DEST_DIR)/../output.txt $(DEST_DIR)
+	@rm -rf $(DEST_DIR)/../20091631.out $(DEST_DIR)/../output.txt $(DEST_DIR)/../*.lst $(DEST_DIR)/../*.obj $(DEST_DIR)
 	@echo "Cleaned."
 
 $(addsuffix .o, $(TARGET)): %.o: %.c %.h .mkdir.o
-	gcc -c $(basename $@).c $(CFLAGS) -o $(OBJS_DIR)/$(PART_NAME)/$(basename $@).o
+	gcc -g -c $(basename $@).c $(CFLAGS) -o $(OBJS_DIR)/$(PART_NAME)/$(basename $@).o
 
 $(addsuffix .test, $(TARGET)): %.test: %.c %.h .mkdir.test
-	gcc    $(basename $@).c $(CFLAGS) -o $(TESTS_DIR)/$(basename $@).test -D$(basename $@)_test $(TEST_INCLUDING)
+	gcc -g   $(basename $@).c $(CFLAGS) -o $(TESTS_DIR)/$(basename $@).test -D$(basename $@)_test $(TEST_INCLUDING)
 
 .PHONY: .mkdir.o
 .mkdir.o:
