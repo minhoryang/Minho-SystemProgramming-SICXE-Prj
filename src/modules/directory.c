@@ -60,7 +60,7 @@ void Directory_File_Type(char * const file){
 		return ;
 	}
 	int b, ch;
-	for(b = '\n'; (ch = getc(fp)) != EOF; b = ch)
+	for(b = '\0'; (ch = getc(fp)) != EOF; b = ch)
 		putchar(b);
 	putchar(b);
 	fclose(fp);
