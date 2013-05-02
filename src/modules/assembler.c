@@ -286,6 +286,10 @@ void assembler_pass3(DOCUMENT *doc, char *filename){
 				}
 			}
 	}
+	if(is_storing){
+		is_storing = false;
+		assembler_pass3_print(fout, line_from, line_end, cnt);
+	}
 	fprintf(fout, "E%06X\n", (unsigned int)doc->end_addr);
 	doc->cur_node = NULL;
 
@@ -295,15 +299,17 @@ void assembler_pass3(DOCUMENT *doc, char *filename){
 void assembler_pass3_print(FILE *fp, Elem *start, Elem *end, size_t cnt){
 	Elem *find;
 	NODE *one = list_entry(start, NODE, elem);
-	fprintf(fp, "T%06X%02X", (unsigned int)one->LOCATION_CNT, (unsigned int)cnt/2);
+	if(cnt){
+		fprintf(fp, "T%06X%02X", (unsigned int)one->LOCATION_CNT, (unsigned int)cnt/2);
 
-	for(find = start;
-		find != list_next(end);
-		find = list_next(find)){
-			NODE *now = list_entry(find, NODE, elem);
-			fprintf(fp, "%s", now->OBJECTCODE);
+		for(find = start;
+			find != list_next(end);
+			find = list_next(find)){
+				NODE *now = list_entry(find, NODE, elem);
+				fprintf(fp, "%s", now->OBJECTCODE);
+		}
+		fprintf(fp, "\n");
 	}
-	fprintf(fp, "\n");
 }
 
 DOCUMENT *document_alloc(){

@@ -49,7 +49,30 @@ bool disassembler(char *filename, Hash *mn){
 				bool _x_ = false;
 				if(buff[2] > '8'){
 					_x_ = true;
-					fprintf(fout, "%c%c", buff[2] - 8, buff[3]);
+					switch(buff[2]){
+						case '9':
+							fprintf(fout, "1");
+							break;
+						case 'A':
+							fprintf(fout, "2");
+							break;
+						case 'B':
+							fprintf(fout, "3");
+							break;
+						case 'C':
+							fprintf(fout, "4");
+							break;
+						case 'D':
+							fprintf(fout, "5");
+							break;
+						case 'E':
+							fprintf(fout, "6");
+							break;
+						case 'F':
+							fprintf(fout, "7");
+							break;
+					}
+					fprintf(fout, "%c", buff[3]);
 				}else{
 					fprintf(fout, "%s", buff+2);
 				}
