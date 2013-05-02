@@ -113,7 +113,9 @@ void assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
 								(now->FLAGS)._X_ = true;
 								if(0)
 									printf("_X_\t");
-							}else if((new_symbol = symbol_add(doc->symtab, now->token_pass[i], null, false)) != NULL){
+							}else if(strcmp(".", now->token_pass[i]) == 0){
+								;
+							}else if((new_symbol = symbol_add(doc->symtab, now->token_pass[i], NULL, false)) != NULL){
 								now->DISP = new_symbol;
 								new_symbol = NULL;
 							}else{
@@ -154,6 +156,8 @@ void assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
 								(now->FLAGS)._X_ = true;
 								if(0)
 									printf("_X_\t");
+							}else if(strcmp(".", now->token_pass[i]) == 0){
+								;
 							}else if((new_symbol = symbol_add(doc->symtab, now->token_pass[i], NULL, false)) != NULL){
 								now->DISP = new_symbol;
 								new_symbol = NULL;
@@ -200,7 +204,7 @@ void assembler_pass2(DOCUMENT *doc, char *filename){
 				if(now->OPCODE){
 					if(now->DISP){
 						if(!now->DISP->link){
-							printf("7ERROR!!!! LINE %lu\n", now->LINE_NUM);
+							printf("7ERROR!!!! LINE %lu DISP %s\n", now->LINE_NUM, now->DISP->symbol);
 							return ;
 						}
 						if((now->FLAGS)._X_){

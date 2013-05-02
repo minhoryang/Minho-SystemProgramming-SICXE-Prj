@@ -1,0 +1,48 @@
+PASTE   START   2000
+SECOND  STL     RETADR
+DLOOP   JSUB    MYFUNC
+        LDA     LENGTH
+		COMP    ZERO
+		JEQ     ENDFIL
+		LDX     ZERO
+		LDCH    Z
+FILLS   STCH    SSTR, X	. SSTR[X] = 'S';
+		TIX     TWENTY  . X+1 < 20?
+		JLT     FILLS
+		J       DLOOP
+ENDFIL  LDA     EOF
+        STA     OURSTR
+		LDA     THREE
+		STA     LENGTH
+		LDL     RETADR
+		RSUB
+EOF     BYTE    C'EOF'
+THREE   WORD    3
+ZERO    WORD    0
+RETADR  RESW    1
+LENGTH  RESW    1
+OURSTR  RESB    8192
+TWENTY  RESW    20
+SSTR    RESB    20
+Z		BYTE    C'Z'
+S       BYTE    C'S'
+		.
+		.
+		.
+MYFUNC	LDX     ZERO
+URLOOP  TD      HISDEV
+        JEQ     URLOOP
+		RD      HISDEV
+		COMP    ZERO
+		JEQ     HERSUB
+		STCH    OURSTR,X
+		TIX     MAXLEN
+		JLT     URLOOP
+HERSUB  STX     LENGTH
+        RSUB
+HISDEV  BYTE    X'0A'
+MAXLEN  WORD    8192
+		.
+		.
+		.
+
