@@ -211,8 +211,11 @@ int Shell_MainLoop(Environment *env){
 							if(!assembler_pass2(env->doc, filename1)){
 								assembler_pass3(env->doc, filename2);
 								printf("\toutput file : [%s], [%s]\n", filename1, filename2);
-							}else
+							}else{
+								remove(filename1);
+								remove(filename2);
 								Shell_Exception(env);
+							}
 						}else
 							Shell_Exception(env);
 					}else
