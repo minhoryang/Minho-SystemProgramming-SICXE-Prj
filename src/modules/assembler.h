@@ -105,3 +105,7 @@
 	bool symbol_less_func(const struct list_elem *a, const struct list_elem *b, void *aux);
 	void symbol_view(List *symtab);
 #endif
+#ifndef src_modules_disassembler
+	#define src_modules_disassembler
+	bool disassembler(char *filename, Hash *mn);
+#endif

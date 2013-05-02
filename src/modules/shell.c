@@ -235,6 +235,14 @@ int Shell_MainLoop(Environment *env){
 				}else
 					Shell_Exception(env);
 				break;
+			case 22:  // "disassemble"
+				if(env->len_token == 2){
+					if(disassembler(env->tokens[1], env->MN)){
+						Shell_Exception(env);
+					}
+				}else
+					Shell_Exception(env);
+				break;
 			default:
 				Shell_Exception(env);
 				break;

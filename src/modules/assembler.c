@@ -9,6 +9,7 @@
 	#include "modules/optab.c"
 	#include "modules/tokenizer.c"
 	int main(){
+		/*
 		char *filename = "2-1.asm", 
 			 *filename1 = strdup(filename),
 			 *filename2 = strdup(filename);
@@ -30,6 +31,15 @@
 		hash_destroy(OP, both_hash_destructor);  // OPCode Unload.
 		assembler_directives_unload(directives);
 		document_dealloc(doc);
+		*/
+		/*
+		Hash *OP = OP_Alloc();  // OPCode Load.
+		Hash *MN = MN_Alloc();
+		OPMN_Load(OP, MN);
+		disassembler("objobj", MN);
+		hash_destroy(OP, both_hash_destructor);  // OPCode Unload.
+		hash_destroy(MN, NULL);
+		*/
 		return 0;
 	}
 #endif
@@ -357,3 +367,4 @@ void node_dealloc(NODE *node){
 
 #include "modules/assembler_directives.c"
 #include "modules/assembler_symbol.c"
+#include "modules/disassembler.c"
