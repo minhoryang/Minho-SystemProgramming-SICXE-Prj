@@ -14,6 +14,11 @@
 		struct list_elem tail;
 	}List;
 
+	typedef bool list_less_func (
+			const struct list_elem *a,
+			const struct list_elem *b,
+			void *aux);
+
 	#define list_entry(LIST_ELEM, STRUCT, MEMBER) ((STRUCT *) ((uint8_t *) &(LIST_ELEM)->next - offsetof (STRUCT, MEMBER.next)))
 
 	void list_init(struct list *list);
@@ -28,4 +33,8 @@
 	struct list_elem *list_pop_front(struct list *list);
 	struct list_elem *list_pop_back(struct list *list);
 	bool list_empty(struct list *list);
+	void list_sort (struct list *list, list_less_func *less, void *aux);
+	struct list_elem *find_end_of_run (struct list_elem *a, struct list_elem *b, list_less_func *less, void *aux);
+	void inplace_merge (struct list_elem *a0, struct list_elem *a1b0, struct list_elem *b1, list_less_func *less, void *aux);
+	void list_splice (struct list_elem *before, struct list_elem *first, struct list_elem *last);
 #endif

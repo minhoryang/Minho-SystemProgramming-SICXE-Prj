@@ -279,7 +279,7 @@ void assembler_pass3(DOCUMENT *doc, char *filename){
 	fprintf(fout, "E%06X\n", (unsigned int)doc->end_addr);
 	doc->cur_node = NULL;
 
-	//fclose(fout);
+	fclose(fout);
 }
 
 void assembler_pass3_print(FILE *fp, Elem *start, Elem *end, size_t cnt){

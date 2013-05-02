@@ -102,4 +102,6 @@
 	#define src_modules_assembler_symbol
 	SYMBOL *symbol_add(List *, char *, NODE *, bool);
 	SYMBOL *symbol_search(List *, char *);
+	bool symbol_less_func(const struct list_elem *a, const struct list_elem *b, void *aux);
+	void symbol_view(List *symtab);
 #endif

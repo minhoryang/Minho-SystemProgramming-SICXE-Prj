@@ -46,3 +46,19 @@ SYMBOL *symbol_search(List *symtab, char *query){
 	return NULL;
 }
 
+bool symbol_less_func(const struct list_elem *a, const struct list_elem *b, void *aux){
+	SYMBOL *sa = list_entry(a, SYMBOL, elem),
+		   *sb = list_entry(b, SYMBOL, elem);
+	return strcasecmp(sa->symbol, sb->symbol) <= 0;
+}
+
+void symbol_view(List *symtab){
+	list_sort(symtab, symbol_less_func, NULL);
+	Elem *find;
+	for(find = list_begin(symtab);
+		find != list_end(symtab);
+		find = list_next(find)){
+			SYMBOL *now = list_entry(find, SYMBOL, elem);
+			printf("\t%s\t%04X\n", now->symbol, (unsigned int)now->link->LOCATION_CNT); 
+	}
+}

@@ -70,6 +70,7 @@ Environment *Shell_AllocateEnvironment(){
 		OPMN_Load(env->OP, env->MN);
 	}
 	{
+		env->doc = NULL;
 		env->asmdir = assembler_directives_load();
 	}
 	return env;
@@ -222,6 +223,15 @@ int Shell_MainLoop(Environment *env){
 			case 20:  // "type"
 				if(env->len_token == 2){
 					Directory_File_Type(env->tokens[1]);
+				}else
+					Shell_Exception(env);
+				break;
+			case 21:  // "symbol"
+				if(env->doc){
+					if(env->len_token == 1){
+						symbol_view(env->doc->symtab);
+					}else
+						Shell_Exception(env);
 				}else
 					Shell_Exception(env);
 				break;
