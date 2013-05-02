@@ -69,9 +69,9 @@
 	}ASMDir;
 
 
-	void assembler_readline(char *, DOCUMENT *);
-	void assembler_pass1(DOCUMENT *, Hash *, List *);
-	void assembler_pass2(DOCUMENT *, char *);
+	bool assembler_readline(char *, DOCUMENT *);
+	bool assembler_pass1(DOCUMENT *, Hash *, List *);
+	bool assembler_pass2(DOCUMENT *, char *);
 	void assembler_pass3(DOCUMENT *, char *);
 	void assembler_pass3_print(FILE *fp, Elem *start, Elem *end, size_t cnt);
 

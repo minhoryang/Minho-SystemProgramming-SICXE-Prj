@@ -201,15 +201,21 @@ int Shell_MainLoop(Environment *env){
 				if(env->len_token == 2){
 					if(env->doc)
 						document_dealloc(env->doc);
-					assembler_readline(env->tokens[1], (env->doc = document_alloc()));
-					assembler_pass1(env->doc, env->OP, env->asmdir);
-					char *filename1 = strdup(env->doc->filename),
-						 *filename2 = strdup(env->doc->filename);
-					strcat(filename1, ".lst");
-					strcat(filename2, ".obj");
-					assembler_pass2(env->doc, filename1);
-					assembler_pass3(env->doc, filename2);
-					printf("\toutput file : [%s], [%s]\n", filename1, filename2);
+					if(!assembler_readline(env->tokens[1], (env->doc = document_alloc()))){
+						if(!assembler_pass1(env->doc, env->OP, env->asmdir)){
+							char *filename1 = strdup(env->doc->filename),
+								 *filename2 = strdup(env->doc->filename);
+							strcat(filename1, ".lst");
+							strcat(filename2, ".obj");
+							if(!assembler_pass2(env->doc, filename1)){
+								assembler_pass3(env->doc, filename2);
+								printf("\toutput file : [%s], [%s]\n", filename1, filename2);
+							}else
+								Shell_Exception(env);
+						}else
+							Shell_Exception(env);
+					}else
+						Shell_Exception(env);
 				}else
 					Shell_Exception(env);
 				break;

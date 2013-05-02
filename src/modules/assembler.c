@@ -34,11 +34,11 @@
 	}
 #endif
 
-void assembler_readline(char *filename, DOCUMENT *doc){
+bool assembler_readline(char *filename, DOCUMENT *doc){
 	FILE *fin = fopen(filename, "r");
 	size_t now = 0, jmp = 5;
 
-	if(fin == NULL) return ;
+	if(fin == NULL) return true;
 
 	while(
 		fgets(
@@ -60,16 +60,18 @@ void assembler_readline(char *filename, DOCUMENT *doc){
 	doc->cur_node = NULL;
 	strncpy(doc->filename, filename, strlen(filename) - 4);
 	fclose(fin);
+	return false;
 }
 
-void assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
+bool assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
 	Elem *find;
+	bool emergency = false;
 
 	for(find = list_begin(doc->nodes);
 		find != list_end(doc->nodes);
 		find = list_next(find)){
 			size_t i = 0;
-			bool got_symbol = false, got_asmdir = false, got_op = false, emergency = false;
+			bool got_symbol = false, got_asmdir = false, got_op = false;
 			NODE *now = (doc->cur_node = list_entry(find, NODE, elem));
 
 			for(i = 0; i < now->token_cnt; i++){
@@ -183,9 +185,10 @@ void assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
 				break;
 	}
 	doc->cur_node = NULL;
+	return emergency;
 }
 
-void assembler_pass2(DOCUMENT *doc, char *filename){
+bool assembler_pass2(DOCUMENT *doc, char *filename){
 	Elem *find;
 	FILE *fout = fopen(filename, "w");
 
@@ -205,7 +208,7 @@ void assembler_pass2(DOCUMENT *doc, char *filename){
 					if(now->DISP){
 						if(!now->DISP->link){
 							printf("7ERROR!!!! LINE %lu DISP %s\n", now->LINE_NUM, now->DISP->symbol);
-							return ;
+							return true;
 						}
 						if((now->FLAGS)._X_){
 							sprintf(now->OBJECTCODE,
@@ -228,6 +231,7 @@ void assembler_pass2(DOCUMENT *doc, char *filename){
 	}
 	doc->cur_node = NULL;
 	fclose(fout);
+	return false;
 }
 
 void assembler_pass3(DOCUMENT *doc, char *filename){
