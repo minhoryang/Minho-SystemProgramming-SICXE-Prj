@@ -17,6 +17,7 @@
 	#include "modules/memory.c"
 	#include "modules/history.c"
 	#include "modules/optab.c"
+	#include "modules/assembler.c"
 
 	int main(int argc, char *argv[]){
 		// The main function for Test-driven development (TDD).
@@ -68,10 +69,16 @@ Environment *Shell_AllocateEnvironment(){
 		env->MN = MN_Alloc();
 		OPMN_Load(env->OP, env->MN);
 	}
+	{
+		env->asmdir = assembler_directives_load();
+	}
 	return env;
 }
 
 void Shell_DeAllocateEnvironment(Environment *env){
+	if(env->doc)
+		document_dealloc(env->doc);
+	assembler_directives_unload(env->asmdir);
 	hash_destroy(env->OP, both_hash_destructor);
 	hash_destroy(env->MN, NULL);
 	History_DeAlloc(env->history);
@@ -189,6 +196,22 @@ int Shell_MainLoop(Environment *env){
 				break;
 			case 18:  // "mnemoniclist"
 				MN_List(env->MN);
+				break;
+			case 19:  // "assemble"
+				if(env->len_token == 2){
+					if(env->doc)
+						document_dealloc(env->doc);
+					assembler_readline(env->tokens[1], (env->doc = document_alloc()));
+					assembler_pass1(env->doc, env->OP, env->asmdir);
+					char *filename1 = strdup(env->doc->filename),
+						 *filename2 = strdup(env->doc->filename);
+					strcat(filename1, ".lst");
+					strcat(filename2, ".obj");
+					assembler_pass2(env->doc, filename1);
+					assembler_pass3(env->doc, filename2);
+					printf("\toutput file : [%s], [%s]\n", filename1, filename2);
+				}else
+					Shell_Exception(env);
 				break;
 			case 20:  // "type"
 				if(env->len_token == 2){

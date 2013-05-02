@@ -1,5 +1,5 @@
 SRC_DIR = ..
-TARGET = shell tokenizer memory directory history optab
+TARGET = tokenizer memory directory history optab assembler shell
 PART_NAME = modules
 TEST_INCLUDING = $(OBJS_DIR)/core/*.o
 

@@ -5,6 +5,7 @@
 	#include "core/list.h"
 	#include "core/hash.h"
 	#include "core/stringswitch.h"
+	#include "modules/assembler.h"
 
 	typedef struct {
 		// Argument.h
@@ -21,6 +22,9 @@
 		List *history;
 		// hash.h for OPTab, MNTab.
 		Hash *OP, *MN;
+		// ASSEMBLER
+		DOCUMENT *doc;
+		List *asmdir;
 		//
 		bool was_clear;
 	}Environment;
