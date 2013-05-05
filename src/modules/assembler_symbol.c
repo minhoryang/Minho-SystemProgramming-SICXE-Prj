@@ -1,16 +1,15 @@
-SYMBOL *symbol_add(List *symtab, char *query, NODE *link, bool TO_SAVE){
+SYMBOL *symbol_add(List *symtab, char *query, NODE *link){
 	if(query == NULL)
 		return NULL;
 	{
 		SYMBOL *existed;
 		if((existed	= symbol_search(symtab, query)) != NULL){
-			if(!TO_SAVE){
+			if(link == NULL){
 				if(0)
-					printf("%s<use ptr> %p %s\n", existed->symbol, link, TO_SAVE?"true\0":"false\0");
+					printf("%s<use ptr> %p\n", existed->symbol, link);
 			}else{
 				if(0)
-					printf("%s<set ptr> %p %s\n", existed->symbol, link, TO_SAVE?"true\0":"false\0");
-				existed->SAVED = TO_SAVE;
+					printf("%s<set ptr> %p\n", existed->symbol, link);
 				existed->link = link;
 			}
 			return existed;
@@ -18,14 +17,13 @@ SYMBOL *symbol_add(List *symtab, char *query, NODE *link, bool TO_SAVE){
 			SYMBOL *new = (SYMBOL *)calloc(1, sizeof(SYMBOL));
 			new->symbol = (char *)calloc(7, sizeof(char));
 			strcpy(new->symbol, query);
-			if(TO_SAVE)
+			if(link != NULL)
 				new->link = link;
-			new->SAVED = TO_SAVE;
 			if(0){
-				if(!TO_SAVE){
-					printf("%s<new ptr> %p %s\n", new->symbol, link, TO_SAVE?"true\0":"false\0");
+				if(link == NULL){
+					printf("%s<new ptr> %p\n", new->symbol, link);
 				}else{
-					printf("%s<new one> %p %s\n", new->symbol, link, TO_SAVE?"true\0":"false\0");
+					printf("%s<new one> %p\n", new->symbol, link);
 				}
 			}
 			list_push_back(symtab, &(new->elem));

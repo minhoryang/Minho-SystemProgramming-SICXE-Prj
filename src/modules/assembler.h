@@ -15,6 +15,8 @@
 		bool _P_;
 		bool _E_;
   #endif
+		bool RESERVED_SO_JMP_OBJ;  // NO NEED TO PRINT!
+		bool COMMENTED_SO_JMP_LST;
 	}Flag;
 
 	typedef struct _DOCUMENT DOCUMENT;
@@ -31,8 +33,6 @@
 		size_t LOCATION_CNT;
 		size_t _size;
 
-		bool RESERVED;
-		bool COMMENTED;
 		SYMBOL *Symbol;
 		OPMNNode *OPCODE;
 		char *STORED_DATA;
@@ -44,7 +44,6 @@
 	}NODE;
 
 	struct _SYMBOL{
-		bool SAVED;
 		Elem elem;
 		char *symbol;
 		NODE *link;
@@ -71,9 +70,10 @@
 
 	bool assembler_readline(char *, DOCUMENT *);
 	bool assembler_pass1(DOCUMENT *, Hash *, List *);
-	bool assembler_pass2(DOCUMENT *, char *);
-	void assembler_pass3(DOCUMENT *, char *);
-	void assembler_pass3_print(FILE *fp, Elem *start, Elem *end, size_t cnt);
+	bool assembler_pass1_got_opcode_check_disp(DOCUMENT *doc, NODE *now, size_t i);
+	bool assembler_make_lst(DOCUMENT *, char *);
+	void assembler_make_obj(DOCUMENT *, char *);
+	void assembler_obj_range_print(FILE *fp, Elem *start, Elem *end, size_t cnt);
 
 	DOCUMENT *document_alloc();
 	void document_dealloc(DOCUMENT *);
@@ -100,7 +100,7 @@
 #endif
 #ifndef src_modules_assembler_symbol
 	#define src_modules_assembler_symbol
-	SYMBOL *symbol_add(List *, char *, NODE *, bool);
+	SYMBOL *symbol_add(List *, char *, NODE *);
 	SYMBOL *symbol_search(List *, char *);
 	bool symbol_less_func(const struct list_elem *a, const struct list_elem *b, void *aux);
 	void symbol_view(List *symtab);

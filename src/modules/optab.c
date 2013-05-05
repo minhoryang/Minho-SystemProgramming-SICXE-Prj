@@ -84,7 +84,7 @@ bool mn_less_func(
 		void *aux){
 	OPMNNode *node_a = hash_entry(a, OPMNNode, mn_elem),
 			 *node_b = hash_entry(b, OPMNNode, mn_elem);
-	if(strcmp(node_a->mnemonic, node_b->mnemonic) < 0)
+	if(strcasecmp(node_a->mnemonic, node_b->mnemonic) < 0)
 		return true;
 	return false;
 }

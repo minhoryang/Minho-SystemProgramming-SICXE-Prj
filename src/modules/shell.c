@@ -208,8 +208,8 @@ int Shell_MainLoop(Environment *env){
 								 *filename2 = strdup(env->doc->filename);
 							strcat(filename1, ".lst");
 							strcat(filename2, ".obj");
-							if(!assembler_pass2(env->doc, filename1)){
-								assembler_pass3(env->doc, filename2);
+							if(!assembler_make_lst(env->doc, filename1)){
+								assembler_make_obj(env->doc, filename2);
 								printf("\toutput file : [%s], [%s]\n", filename1, filename2);
 							}else{
 								remove(filename1);

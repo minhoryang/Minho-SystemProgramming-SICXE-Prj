@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>  // strcmp().
 #include <dirent.h>  // struct dirent, scandir().
 #include <sys/stat.h>  // lstat(), S_ISDIR(), S_IXUER.
 

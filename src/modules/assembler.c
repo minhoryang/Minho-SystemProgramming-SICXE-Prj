@@ -9,179 +9,151 @@
 	#include "modules/optab.c"
 	#include "modules/tokenizer.c"
 	int main(){
-		/*
-		char *filename = "2-1.asm", 
-			 *filename1 = strdup(filename),
-			 *filename2 = strdup(filename);
-		strcat(filename1, ".lst");
-		strcat(filename2, ".obj");
+		bool select_test = false;
+		if(select_test){
+			char *filename = "2-1.asm",   // TODO FILENAME
+				 *filename1 = strdup(filename),
+				 *filename2 = strdup(filename);
+			strcat(filename1, ".lst");
+			strcat(filename2, ".obj");
+
+			DOCUMENT *doc;
+
+			Hash *OP = OP_Alloc();  // OPCode Load.
+			OPMN_Load(OP, NULL);
+
+			List *directives = assembler_directives_load();
 		
-		DOCUMENT *doc;
+			assembler_readline(filename, (doc = document_alloc()));
+			assembler_pass1(doc, OP, directives);
+			assembler_make_lst(doc, filename1);
+			assembler_make_obj(doc, filename2);
 
-		Hash *OP = OP_Alloc();  // OPCode Load.
-		OPMN_Load(OP, NULL);
-
-		List *directives = assembler_directives_load();
-		
-		assembler_readline(filename, (doc = document_alloc()));
-		assembler_pass1(doc, OP, directives);
-		assembler_pass2(doc, filename1);
-		assembler_pass3(doc, filename2);
-
-		hash_destroy(OP, both_hash_destructor);  // OPCode Unload.
-		assembler_directives_unload(directives);
-		document_dealloc(doc);
-		*/
-		/*
-		Hash *OP = OP_Alloc();  // OPCode Load.
-		Hash *MN = MN_Alloc();
-		OPMN_Load(OP, MN);
-		disassembler("objobj", MN);
-		hash_destroy(OP, both_hash_destructor);  // OPCode Unload.
-		hash_destroy(MN, NULL);
-		*/
+			hash_destroy(OP, both_hash_destructor);  // OPCode Unload.
+			assembler_directives_unload(directives);
+			document_dealloc(doc);
+		}else{
+			Hash *OP = OP_Alloc();  // OPCode Load.
+			Hash *MN = MN_Alloc();
+			OPMN_Load(OP, MN);
+			// disassembler("objobj", MN);
+			hash_destroy(OP, both_hash_destructor);  // OPCode Unload.
+			hash_destroy(MN, NULL);
+		}
 		return 0;
 	}
 #endif
 
 bool assembler_readline(char *filename, DOCUMENT *doc){
+	// XXX : Read Line -> Assign Node -> set$lineNum$ -> Add Node @ DOCUMENT.
 	FILE *fin = fopen(filename, "r");
-	size_t now = 0, jmp = 5;
+	size_t lineNum = 0, jmp = 5;
 
 	if(fin == NULL) return true;
 
 	while(
-		fgets(
+		fgets(  // Allocate and Get 1 line.
 			(doc->cur_node = node_alloc())->token_orig,
 			Tokenizer_Max_Length,
 			fin) != NULL){
-				// NoEnter.
-				char *new = Tokenizer_NoEnter((doc->cur_node)->token_orig);
-				free((doc->cur_node)->token_orig);
-				(doc->cur_node)->token_orig = new;
-				// Readline.
-				list_push_back(doc->nodes, &((doc->cur_node)->elem));
-				(doc->cur_node)->token_cnt = Tokenizer(
+				{  // Pass tokenier for 'Enter' and Swap these.
+					char *new = Tokenizer_NoEnter((doc->cur_node)->token_orig);
+					free((doc->cur_node)->token_orig);
+					(doc->cur_node)->token_orig = new;
+				}
+				{  // Add node to Document.
+					list_push_back(doc->nodes, &((doc->cur_node)->elem));
+					(doc->cur_node)->token_cnt = Tokenizer(
 									(doc->cur_node)->token_orig,
 									(doc->cur_node)->token_pass,
 									true);
-				now = ((doc->cur_node)->LINE_NUM = now + jmp);
+					lineNum = ((doc->cur_node)->LINE_NUM = lineNum + jmp);
+				}
 	}
 	doc->cur_node = NULL;
-	strncpy(doc->filename, filename, strlen(filename) - 4);
+	strncpy(doc->filename, filename, strlen(filename) - 4);  // TODO FILENAME
 	fclose(fin);
 	return false;
 }
 
 bool assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
+	// XXX : Pass 1.
 	Elem *find;
-	bool emergency = false;
+	bool OMGflag = false;
 
 	for(find = list_begin(doc->nodes);
 		find != list_end(doc->nodes);
 		find = list_next(find)){
+
 			size_t i = 0;
-			bool got_symbol = false, got_asmdir = false, got_op = false;
+			bool hasSymbol = false, hasAsmdir = false, hasOpcode = false;
 			NODE *now = (doc->cur_node = list_entry(find, NODE, elem));
 
 			for(i = 0; i < now->token_cnt; i++){
-				OPMNNode *found_op;
+				OPMNNode *found_opcode;
 				ASMDir *found_asmdir;
 				SYMBOL *new_symbol;
-				if(!got_symbol){  // 1. NO SYMBOL
-					if(!got_asmdir && !got_op){  // 1-A. NO SYMBOL & NO CMD
+
+				if(!hasSymbol){  // 1. NO SYMBOL
+					if(!hasAsmdir && !hasOpcode){  // 1-A. NO SYMBOL & NO CMD
 						// need to find 'CMD' or 'SYMBOL'.
-						if((found_op = MN_Search(opcode, now->token_pass[i])) != NULL){ // 1-A-a. NO SYMBOL, GOT OPCODE.
-							if(0)
-								printf("OPCODE! %s\t", now->token_pass[i]);
-							got_op = true;
-							now->OPCODE = found_op;
-							now->_size = 3;  // TODO!
-						}else if((found_asmdir = assembler_directives_search(asmdirs, now->token_pass[i])) != NULL){  // 1-A-b. NO SYMBOL, GOT ASMDIR.
-							if(0)
-								printf("ASMDIR! %s\t", now->token_pass[i]);
-							got_asmdir = true;
-							found_asmdir->apply(doc, (void *)now->token_pass[i+1]);
-						}else if(strcmp(".", now->token_pass[i]) == 0){  // 1-A-c. NO SYMBOL, USELESS COMMENT LINE.
-							now->COMMENTED = true;
+#define IF_OPCODE_OR_ASMDIR_DO \
+						if((found_opcode = MN_Search(opcode, now->token_pass[i])) != NULL){	\
+							if(0)	\
+								printf("OPCODE! %s\t", now->token_pass[i]);	\
+							hasOpcode = true;	\
+							now->OPCODE = found_opcode;	\
+							now->_size = 3;	\
+						}else if((found_asmdir = assembler_directives_search(asmdirs, now->token_pass[i])) != NULL){	\
+							if(0)	\
+								printf("ASMDIR! %s\t", now->token_pass[i]);	\
+							hasAsmdir = true;	\
+							found_asmdir->apply(doc, (void *)now->token_pass[i+1]);	\
+						}  // SET AWESOME MACRO for REDUCING DUPLICATED AREA!
+
+						IF_OPCODE_OR_ASMDIR_DO  // if (above)
+						else if(strcasecmp(".", now->token_pass[i]) == 0){
+							now->FLAGS.COMMENTED_SO_JMP_LST = true;
 							break;
 						}else{  // 1-A-d. << SHOULD BE SYMBOL >>
 							if(0)
 								printf("SYMBOL! %s\t", now->token_pass[i]);
-							got_symbol = true;
-							if((new_symbol = symbol_add(doc->symtab, now->token_pass[i], now, true)) != NULL){
+							hasSymbol = true;
+							if((new_symbol = symbol_add(doc->symtab, now->token_pass[i], now)) != NULL){
 								now->Symbol = new_symbol;
 								new_symbol = NULL;
 							}else{
 								printf("ERROR!!!! LINE %lu : RIGHT AFTER SYMBOL's POSITION, NEED TO FOLLOW MNEMONIC/ASMDIRs.\n", now->LINE_NUM);
-								emergency = true;
+								OMGflag = true;
 							}
 						}
-					}else{
-						// rest of it would be 'DISP'.
-						// --------------------------------
-						if(got_op){  // 1-B. NO SYMBOL, OPCODE WORKS!
-							if(strcmp("X", now->token_pass[i]) == 0){  // TODO 0->SAME
-								(now->FLAGS)._X_ = true;
-								if(0)
-									printf("_X_\t");
-							}else if(strcmp(".", now->token_pass[i]) == 0){
-								;
-							}else if((new_symbol = symbol_add(doc->symtab, now->token_pass[i], NULL, false)) != NULL){
-								now->DISP = new_symbol;
-								new_symbol = NULL;
-							}else{
-								printf("2ERROR!!!! LINE %lu\n", now->LINE_NUM);
-								emergency = true;
-							}
-						}else if(got_asmdir){  // 1-C. NO SYMBOL, ASMDIR WORKS!
+					}else{  // NO SYMBOL, GOT CMD.
+						if(hasOpcode){  // 1-B. NO SYMBOL, OPCODE WORKS!
+							OMGflag = assembler_pass1_got_opcode_check_disp(doc, now, i);	
+						}else if(hasAsmdir){  // 1-C. NO SYMBOL, ASMDIR WORKS!
 							// XXX : IGNORE for 'END' and 'EQU', ...
 						}else{  // 1-D. NO SYMBOL, NO CMD!
 							printf("3ERROR!!!! LINE %lu\n", now->LINE_NUM);
-							emergency = true;
+							OMGflag = true;
 						}
-						// --------------------------------
 					}
 				}else{
-					if(!got_asmdir && !got_op){
-						// have to be 'CMD' here!
-						if((found_op = MN_Search(opcode, now->token_pass[i])) != NULL){
-							got_op = true;
-							if(0)
-								printf("OPCODE! %s\t", now->token_pass[i]);
-							now->OPCODE = found_op;
-							now->_size = 3;  // TODO!
-						}else if((found_asmdir = assembler_directives_search(asmdirs, now->token_pass[i])) != NULL){
-							got_asmdir = true;
-							if(0)
-								printf("ASMDIR! %s\t", now->token_pass[i]);
-							found_asmdir->apply(doc, (void *)now->token_pass[i+1]);
-						}else{
+					if(!hasAsmdir && !hasOpcode){
+						IF_OPCODE_OR_ASMDIR_DO  // if (above)
+						else{
 							printf("4ERROR!!!! LINE %lu\n", now->LINE_NUM);
-							emergency = true;
+							OMGflag = true;
 						}
 					}else{
 						// rest of it would be 'DISP'.
 						// --------------------------------
-						if(got_op){
-							if(strcmp("X", now->token_pass[i]) == 0){  // TODO 0->SAME
-								(now->FLAGS)._X_ = true;
-								if(0)
-									printf("_X_\t");
-							}else if(strcmp(".", now->token_pass[i]) == 0){
-								;
-							}else if((new_symbol = symbol_add(doc->symtab, now->token_pass[i], NULL, false)) != NULL){
-								now->DISP = new_symbol;
-								new_symbol = NULL;
-							}else{
-								printf("5ERROR!!!! LINE %lu\n", now->LINE_NUM);
-								emergency = true;
-							}
-						}else if(got_asmdir){
+						if(hasOpcode){
+							OMGflag = assembler_pass1_got_opcode_check_disp(doc, now, i);	
+						}else if(hasAsmdir){
 							// XXX : IGNORE for 'END' and 'EQU', ...
 						}else{
 							printf("6ERROR!!!! LINE %lu\n", now->LINE_NUM);
-							emergency = true;
+							OMGflag = true;
 						}
 						// --------------------------------
 					}
@@ -191,14 +163,34 @@ bool assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
 			doc->prev_locctr = now->LOCATION_CNT + now->_size;
 			if(0)
 				printf(" %04X\n", (unsigned int)now->LOCATION_CNT);
-			if(emergency)
+			if(OMGflag)
 				break;
 	}
 	doc->cur_node = NULL;
-	return emergency;
+	return OMGflag;
 }
 
-bool assembler_pass2(DOCUMENT *doc, char *filename){
+bool assembler_pass1_got_opcode_check_disp(DOCUMENT *doc, NODE *now, size_t i){
+	bool OMGflag = false;
+	SYMBOL *new_symbol;
+
+	if(strcasecmp("X", now->token_pass[i]) == 0){
+		(now->FLAGS)._X_ = true;
+		if(0)
+			printf("_X_\t");
+	}else if(strcasecmp(".", now->token_pass[i]) == 0){
+		// IGNORE COMMENT!
+	}else if((new_symbol = symbol_add(doc->symtab, now->token_pass[i], NULL)) != NULL){
+		now->DISP = new_symbol;
+		new_symbol = NULL;
+	}else{
+		printf("2ERROR!!!! LINE %lu\n", now->LINE_NUM);
+		OMGflag = true;
+	}
+	return OMGflag;
+}
+
+bool assembler_make_lst(DOCUMENT *doc, char *filename){
 	Elem *find;
 	FILE *fout = fopen(filename, "w");
 
@@ -207,7 +199,7 @@ bool assembler_pass2(DOCUMENT *doc, char *filename){
 		find = list_next(find)){
 			NODE *now = (doc->cur_node = list_entry(find, NODE, elem));
 			fprintf(fout, "%5lu\t", now->LINE_NUM); 
-			if(!now->COMMENTED){
+			if(!now->FLAGS.COMMENTED_SO_JMP_LST){
 				fprintf(fout, "%04X", (unsigned int)(now->LOCATION_CNT)); 
 			}
 			fprintf(fout, "\t%s\t", now->token_orig); 
@@ -244,7 +236,7 @@ bool assembler_pass2(DOCUMENT *doc, char *filename){
 	return false;
 }
 
-void assembler_pass3(DOCUMENT *doc, char *filename){
+void assembler_make_obj(DOCUMENT *doc, char *filename){
 	Elem *find;
 	FILE *fout = fopen(filename, "w");
 	size_t cnt = 0, max_cnt = 60;
@@ -257,12 +249,10 @@ void assembler_pass3(DOCUMENT *doc, char *filename){
 		find != list_end(doc->nodes);
 		find = list_next(find)){
 			NODE *now = (doc->cur_node = list_entry(find, NODE, elem));
-			if(now->RESERVED){
-				// 정산!
+			if(now->FLAGS.RESERVED_SO_JMP_OBJ){
 				if(is_storing){
 					is_storing = false;
-					// 출력함수 line_from ~ line_end;
-					assembler_pass3_print(fout, line_from, line_end, cnt);
+					assembler_obj_range_print(fout, line_from, line_end, cnt);
 				}
 			}else{
 				if(!is_storing){
@@ -273,8 +263,7 @@ void assembler_pass3(DOCUMENT *doc, char *filename){
 				}else{
 					if(cnt + strlen(now->OBJECTCODE) > max_cnt){
 						is_storing = false;
-						// 출력함수 line_from ~ line_end;
-						assembler_pass3_print(fout, line_from, line_end, cnt);
+						assembler_obj_range_print(fout, line_from, line_end, cnt);
 						is_storing = true;
 						line_from = find;
 						line_end = find;
@@ -288,15 +277,16 @@ void assembler_pass3(DOCUMENT *doc, char *filename){
 	}
 	if(is_storing){
 		is_storing = false;
-		assembler_pass3_print(fout, line_from, line_end, cnt);
+		assembler_obj_range_print(fout, line_from, line_end, cnt);
 	}
-	fprintf(fout, "E%06X\n", (unsigned int)doc->end_addr);
 	doc->cur_node = NULL;
+
+	fprintf(fout, "E%06X\n", (unsigned int)doc->end_addr);
 
 	fclose(fout);
 }
 
-void assembler_pass3_print(FILE *fp, Elem *start, Elem *end, size_t cnt){
+void assembler_obj_range_print(FILE *fp, Elem *start, Elem *end, size_t cnt){
 	Elem *find;
 	NODE *one = list_entry(start, NODE, elem);
 	if(cnt){
@@ -371,6 +361,7 @@ void node_dealloc(NODE *node){
 	free(node);
 }
 
+// XXX : For linking issue between *assembler*.c and *assembler*.h, merging all files to one assembler.c file.
 #include "modules/assembler_directives.c"
 #include "modules/assembler_symbol.c"
 #include "modules/disassembler.c"

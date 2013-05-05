@@ -50,7 +50,7 @@ void DeAllocStringSwitchSet(StringSwitchSet *a){
 int String2Switch(StringSwitchSet *a, char * const input){
 	int n;
 	for(n = a->length-1; n >= 0; n--){
-		if(!strcmp(a->list[n], input)){
+		if(!strcasecmp(a->list[n], input)){
 			break;
 		}
 	}
