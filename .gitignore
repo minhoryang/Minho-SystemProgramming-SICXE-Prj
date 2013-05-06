@@ -1,5 +1,6 @@
 src/built
 src/20091631.out
 src/output.txt
-src/2-1.lst
-src/2-1.obj
+src/*.asm
+src/*.lst
+src/*.obj
