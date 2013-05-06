@@ -94,7 +94,7 @@ void OPMN_Load(Hash *OP, Hash *MN){
 	char *line = (char *)calloc(Tokenizer_Max_Length, sizeof(char)), **out;
 	size_t cnt;
 	while(fgets(line, Tokenizer_Max_Length, fp) != NULL){
-		if((cnt = Tokenizer(line, (out = AllocToken()), false))){
+		if((cnt = Tokenizer(line, (out = AllocToken()), NONE))){
 			bool formats[4] = {false,};
 			{  // OPCODE FORMAT HANDLER!
 				int a[4] = {0,},

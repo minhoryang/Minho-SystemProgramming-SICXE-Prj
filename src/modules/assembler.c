@@ -68,7 +68,7 @@ bool assembler_readline(char *filename, DOCUMENT *doc){
 					(doc->cur_node)->token_cnt = Tokenizer(
 									(doc->cur_node)->token_orig,
 									(doc->cur_node)->token_pass,
-									true);
+									SIC);
 					{  // XXX : LineNumber Generator.
 						char *swap;
 						switch(lineNumIn){

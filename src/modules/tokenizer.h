@@ -10,7 +10,13 @@
 	}Quotes;
 
 	#ifndef src_modules_tokenizer_deprecated
-		size_t Tokenizer(char* const line, char **result, bool pipe);
+		typedef	enum ThreeStatesSelector {
+			NONE=0,
+			SIC,
+			SICXE
+		}ThreeStatesSelector;
+
+		size_t Tokenizer(char* const line, char **result, ThreeStatesSelector flag);
 		char **AllocToken();
 		void DeAllocToken(char **token);
 	#else

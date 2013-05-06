@@ -24,7 +24,7 @@
 	
 		while(fgets(line, Tokenizer_Max_Length, fin) != NULL){  // for every inputed lines,
 	#ifndef src_modules_tokenizer_deprecated
-			cnt = Tokenizer(line, (out = AllocToken()), true);  // Tokenizer works perfectly.
+			cnt = Tokenizer(line, (out = AllocToken()), SIC);  // Tokenizer works perfectly.
 			for(i = 0; i < cnt; i++){
 				fprintf(fout, "%s\n", out[i]);
 				printf("%s\n", out[i]);
@@ -45,22 +45,24 @@
 #endif
 
 #ifndef src_modules_tokenizer_deprecated
-	size_t Tokenizer(char* const line, char **result, bool pipe){
+	size_t Tokenizer(char* const line, char **result, ThreeStatesSelector flag){
 		// XXX : Split words per Tokenizer_Separator.
 		char *i, *j;  // PIPELINE variables.
 		size_t len_found = 0,
 			   len_result = 0;
 		bool is_found = false;
 
-		if(pipe){
+		if(flag == SIC){
 			// XXX : PIPELINE!
 			Quotes *datas = AllocQuotes();
 			j = Tokenizer_FindQuotes(line, datas);
 			i = Tokenizer_NoComments(j); free(j);
 			j = Tokenizer_DeBlanks(i); free(i);
-			i = Tokenizer_FillQuotes(j, datas); free(j);
+			i = Tokenizer_NoSpecialChars(j); free(j);
+			j = Tokenizer_FillQuotes(i, datas); free(i);
+			i = j;
 			DeAllocQuotes(datas);
-		}else{
+		}else if(flag == NONE){
 			i = Tokenizer_DeBlanks(line);
 		}
 
@@ -340,16 +342,16 @@ char *Tokenizer_NoSpecialChars(char * const line){
 	size_t len_result = 0;
 
 	for(now = line; *now != '\0'; now++){  // for every letters..
-		bool is_allowed = false;
 
 		// check if in alphabets.
 		if(('A' <= *now) && (*now <= 'Z')){
-			is_allowed = true;
+			result[len_result++] = *now;
 		}else if(('a' <= *now) && (*now <= 'z')){
-			is_allowed = true;
+			result[len_result++] = *now;
 		}else if(('0' <= *now) && (*now <= '9')){  // check if in numbers.
-			is_allowed = true;
+			result[len_result++] = *now;
 		}else{  // check if in Tokenizer_Allows.
+			bool is_allowed = false;
 			size_t cur;
 			for(cur=0; cur<Tokenizer_Allows_Cnt; cur++){
 				if(Tokenizer_Allows[cur] == *now){
@@ -357,12 +359,12 @@ char *Tokenizer_NoSpecialChars(char * const line){
 					break;
 				}
 			}
-		}
-
-		if(is_allowed){
-			result[len_result++] = *now;
-		}else{
-			result[len_result++] = Tokenizer_Separator;
+			if(is_allowed){
+				result[len_result++] = *now;
+				result[len_result++] = Tokenizer_Separator;
+			}else{
+				result[len_result++] = Tokenizer_Separator;
+			}
 		}
 	}
 	return result;

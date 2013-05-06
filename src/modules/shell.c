@@ -101,7 +101,7 @@ int Shell_MainLoop(Environment *env){
 	// Handler
 	{
 		fgets(env->line, Tokenizer_Max_Length, env->fin);
-		env->len_token = Tokenizer(env->line, env->tokens, false);
+		env->len_token = Tokenizer(env->line, env->tokens, NONE);
 		StringSwitch(env->cmds, env->tokens[0]){
 			case 0:  // "help"
 			case 1:  // "h"
