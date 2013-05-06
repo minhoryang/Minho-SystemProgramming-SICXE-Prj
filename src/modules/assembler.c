@@ -71,23 +71,27 @@ bool assembler_readline(char *filename, DOCUMENT *doc){
 									SIC);
 					{  // XXX : LineNumber Generator.
 						char *swap;
-						switch(lineNumIn){
-							case reset:  // DEFAULT. Try to find LineNum at inputs.
-								if((doc->cur_node)->token_cnt > 0){
-									bool is_lineNum = true;
-									char *n;
-									for(n=(doc->cur_node)->token_pass[0]; *n != '\0'; n++){  // LineNum Checker.
-										is_lineNum &= (bool)isdigit(*n);
-										if(!is_lineNum)
-											break;
-									}
-									if(is_lineNum)
-										lineNumIn = yes;
-									else
-										lineNumIn = no;
-									if(DEBUG_PRINT)
-										printf("%s\n", lineNumIn ? "yes" : "no");
+						if(lineNumIn == reset){  // ONE-TIME-ONLY. Try to find LineNum at inputs.
+							if((doc->cur_node)->token_cnt > 0){
+								bool is_lineNum = true;
+								char *n;
+								for(n=(doc->cur_node)->token_pass[0]; *n != '\0'; n++){  // LineNum Checker.
+									is_lineNum &= (bool)isdigit(*n);
+									if(!is_lineNum)
+										break;
 								}
+								if(is_lineNum)
+									lineNumIn = yes;
+								else
+									lineNumIn = no;
+								if(DEBUG_PRINT)
+									printf("%s\n", lineNumIn ? "yes" : "no");
+							}
+						}else{/* Nothing!, switch-case handle rest. */}
+						switch(lineNumIn){
+							case reset:
+								// HANDLED ONE-TIME-ONLY.
+								break;
 							case yes:
 								(doc->cur_node)->LINE_NUM = (unsigned int)atoi((doc->cur_node)->token_pass[0]);
 								{  // IGNORE LINENUMBER FOR ASSEMBLER_PASS.
