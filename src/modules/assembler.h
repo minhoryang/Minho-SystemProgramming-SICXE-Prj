@@ -1,3 +1,5 @@
+#define DEBUG_PRINT true
+
 #ifndef src_modules_assembler
 	#define src_modules_assembler
 	

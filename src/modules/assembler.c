@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -48,6 +49,7 @@ bool assembler_readline(char *filename, DOCUMENT *doc){
 	// XXX : Read Line -> Assign Node -> set$lineNum$ -> Add Node @ DOCUMENT.
 	FILE *fin = fopen(filename, "r");
 	size_t lineNum = 0, jmp = 5;
+	enum ThreeStates {reset=-1, no, yes} lineNumIn = reset;
 
 	if(fin == NULL) return true;
 
@@ -67,7 +69,42 @@ bool assembler_readline(char *filename, DOCUMENT *doc){
 									(doc->cur_node)->token_orig,
 									(doc->cur_node)->token_pass,
 									true);
-					lineNum = ((doc->cur_node)->LINE_NUM = lineNum + jmp);
+					{  // XXX : LineNumber Generator.
+						char *swap;
+						switch(lineNumIn){
+							case reset:  // DEFAULT. Try to find LineNum at inputs.
+								if((doc->cur_node)->token_cnt > 0){
+									bool is_lineNum = true;
+									char *n;
+									for(n=(doc->cur_node)->token_pass[0]; *n != '\0'; n++){  // LineNum Checker.
+										is_lineNum &= (bool)isdigit(*n);
+										if(!is_lineNum)
+											break;
+									}
+									if(is_lineNum)
+										lineNumIn = yes;
+									else
+										lineNumIn = no;
+									if(DEBUG_PRINT)
+										printf("%s\n", lineNumIn ? "yes" : "no");
+								}
+							case yes:
+								(doc->cur_node)->LINE_NUM = (unsigned int)atoi((doc->cur_node)->token_pass[0]);
+								{  // IGNORE LINENUMBER FOR ASSEMBLER_PASS.
+									{  // Shift << 'LineNum'.
+										swap = (doc->cur_node)->token_pass[0];  // 0
+										for(jmp = 1; jmp < Tokenizer_Max_Length; jmp++)  // 1~81=>0~80
+											(doc->cur_node)->token_pass[jmp-1] = (doc->cur_node)->token_pass[jmp];
+										(doc->cur_node)->token_pass[Tokenizer_Max_Length-1] = swap;  // 81=>0.
+									}
+									(doc->cur_node)->token_cnt--;  // Set 'ignore' as decreasing token_cnt.
+								}
+								break;
+							case no:
+								lineNum = ((doc->cur_node)->LINE_NUM = lineNum + jmp);
+								break;
+						}
+					}
 				}
 	}
 	doc->cur_node = NULL;
@@ -99,13 +136,13 @@ bool assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
 						// need to find 'CMD' or 'SYMBOL'.
 #define IF_OPCODE_OR_ASMDIR_DO \
 						if((found_opcode = MN_Search(opcode, now->token_pass[i])) != NULL){	\
-							if(0)	\
+							if(DEBUG_PRINT)	\
 								printf("OPCODE! %s\t", now->token_pass[i]);	\
 							hasOpcode = true;	\
 							now->OPCODE = found_opcode;	\
 							now->_size = 3;	\
 						}else if((found_asmdir = assembler_directives_search(asmdirs, now->token_pass[i])) != NULL){	\
-							if(0)	\
+							if(DEBUG_PRINT)	\
 								printf("ASMDIR! %s\t", now->token_pass[i]);	\
 							hasAsmdir = true;	\
 							found_asmdir->apply(doc, (void *)now->token_pass[i+1]);	\
@@ -116,7 +153,7 @@ bool assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
 							now->FLAGS.COMMENTED_SO_JMP_LST = true;
 							break;
 						}else{  // 1-A-d. << SHOULD BE SYMBOL >>
-							if(0)
+							if(DEBUG_PRINT)
 								printf("SYMBOL! %s\t", now->token_pass[i]);
 							hasSymbol = true;
 							if((new_symbol = symbol_add(doc->symtab, now->token_pass[i], now)) != NULL){
@@ -142,13 +179,19 @@ bool assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
 						IF_OPCODE_OR_ASMDIR_DO  // if (above)
 						else{
 							printf("4ERROR!!!! LINE %lu\n", now->LINE_NUM);
+							if(DEBUG_PRINT)
+								for(i=0;i<now->token_cnt;i++)
+									printf("<%s>\n",now->token_pass[i]);
+							
 							OMGflag = true;
 						}
 					}else{
 						// rest of it would be 'DISP'.
 						// --------------------------------
 						if(hasOpcode){
-							OMGflag = assembler_pass1_got_opcode_check_disp(doc, now, i);	
+							if((OMGflag = assembler_pass1_got_opcode_check_disp(doc, now, i))){
+								printf("5ERROR!!!! LINE %lu\n", now->LINE_NUM);
+							}
 						}else if(hasAsmdir){
 							// XXX : IGNORE for 'END' and 'EQU', ...
 						}else{
@@ -161,7 +204,7 @@ bool assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
 			}
 			now->LOCATION_CNT = doc->prev_locctr;
 			doc->prev_locctr = now->LOCATION_CNT + now->_size;
-			if(0)
+			if(DEBUG_PRINT)
 				printf(" %04X\n", (unsigned int)now->LOCATION_CNT);
 			if(OMGflag)
 				break;
@@ -176,7 +219,7 @@ bool assembler_pass1_got_opcode_check_disp(DOCUMENT *doc, NODE *now, size_t i){
 
 	if(strcasecmp("X", now->token_pass[i]) == 0){
 		(now->FLAGS)._X_ = true;
-		if(0)
+		if(DEBUG_PRINT)
 			printf("_X_\t");
 	}else if(strcasecmp(".", now->token_pass[i]) == 0){
 		// IGNORE COMMENT!

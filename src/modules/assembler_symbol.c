@@ -5,10 +5,10 @@ SYMBOL *symbol_add(List *symtab, char *query, NODE *link){
 		SYMBOL *existed;
 		if((existed	= symbol_search(symtab, query)) != NULL){
 			if(link == NULL){
-				if(0)
+				if(DEBUG_PRINT)
 					printf("%s<use ptr> %p\n", existed->symbol, link);
 			}else{
-				if(0)
+				if(DEBUG_PRINT)
 					printf("%s<set ptr> %p\n", existed->symbol, link);
 				existed->link = link;
 			}
@@ -19,7 +19,7 @@ SYMBOL *symbol_add(List *symtab, char *query, NODE *link){
 			strcpy(new->symbol, query);
 			if(link != NULL)
 				new->link = link;
-			if(0){
+			if(DEBUG_PRINT){
 				if(link == NULL){
 					printf("%s<new ptr> %p\n", new->symbol, link);
 				}else{
