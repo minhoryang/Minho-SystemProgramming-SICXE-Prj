@@ -94,6 +94,7 @@ bool assembler_readline(char *filename, DOCUMENT *doc){
 								break;
 							case yes:
 								(doc->cur_node)->LINE_NUM = (unsigned int)atoi((doc->cur_node)->token_pass[0]);
+								if((doc->cur_node)->token_cnt)
 								{  // IGNORE LINENUMBER FOR ASSEMBLER_PASS.
 									{  // Shift << 'LineNum'.
 										swap = (doc->cur_node)->token_pass[0];  // 0
