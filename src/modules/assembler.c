@@ -127,11 +127,10 @@ bool assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
 		find != list_end(doc->nodes);
 		find = list_next(find)){
 
-			size_t i = 0;
 			bool hasSymbol = false, hasAsmdir = false, hasOpcode = false;
 			NODE *now = (doc->cur_node = list_entry(find, NODE, elem));
 
-			for(i = 0; i < now->token_cnt; i++){
+			for(now->cur_token = 0; now->cur_token < now->token_cnt; now->cur_token++){
 				OPMNNode *found_opcode;
 				ASMDir *found_asmdir;
 				SYMBOL *new_symbol;
@@ -140,43 +139,47 @@ bool assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
 					if(!hasAsmdir && !hasOpcode){  // 1-A. NO SYMBOL & NO CMD
 						// need to find 'CMD' or 'SYMBOL'.
 #define IF_OPCODE_OR_ASMDIR_DO \
-						if((found_opcode = MN_Search(opcode, now->token_pass[i])) != NULL){	\
+						if((found_opcode = MN_Search(opcode, now->token_pass[now->cur_token])) != NULL){	\
 							if(DEBUG_PRINT)	\
-								printf("OPCODE! %s\t", now->token_pass[i]);	\
+								printf("OPCODE! %s\t", now->token_pass[now->cur_token]);	\
 							hasOpcode = true;	\
 							now->OPCODE = found_opcode;	\
 							now->_size = 3;	\
-						}else if((found_asmdir = assembler_directives_search(asmdirs, now->token_pass[i])) != NULL){	\
+						}else if((found_asmdir = assembler_directives_search(asmdirs, now->token_pass[now->cur_token])) != NULL){	\
 							if(DEBUG_PRINT)	\
-								printf("ASMDIR! %s\t", now->token_pass[i]);	\
+								printf("ASMDIR! %s\t", now->token_pass[now->cur_token]);	\
 							hasAsmdir = true;	\
-							found_asmdir->apply(doc, (void *)now->token_pass[i+1]);	\
+							found_asmdir->apply(doc);	\
 						}  // SET AWESOME MACRO for REDUCING DUPLICATED AREA!
 
 						IF_OPCODE_OR_ASMDIR_DO  // if (above)
-						else if(strcasecmp(".", now->token_pass[i]) == 0){
+						else if(strcasecmp(".", now->token_pass[now->cur_token]) == 0){
 							now->FLAGS.COMMENTED_SO_JMP_LST = true;
 							break;
 						}else{  // 1-A-d. << SHOULD BE SYMBOL >>
 							if(DEBUG_PRINT)
-								printf("SYMBOL! %s\t", now->token_pass[i]);
+								printf("SYMBOL! %s\t", now->token_pass[now->cur_token]);
 							hasSymbol = true;
-							if((new_symbol = symbol_add(doc->symtab, now->token_pass[i], now)) != NULL){
+							if((new_symbol = symbol_add(doc->symtab, now->token_pass[now->cur_token], now)) != NULL){
 								now->Symbol = new_symbol;
 								new_symbol = NULL;
 							}else{
 								printf("ERROR!!!! LINE %lu : RIGHT AFTER SYMBOL's POSITION, NEED TO FOLLOW MNEMONIC/ASMDIRs.\n", now->LINE_NUM);
 								OMGflag = true;
+								break;
 							}
 						}
 					}else{  // NO SYMBOL, GOT CMD.
 						if(hasOpcode){  // 1-B. NO SYMBOL, OPCODE WORKS!
-							OMGflag = assembler_pass1_got_opcode_check_disp(doc, now, i);	
+							if((OMGflag = assembler_pass1_got_opcode_check_disp(doc, now))){
+								break;
+							}
 						}else if(hasAsmdir){  // 1-C. NO SYMBOL, ASMDIR WORKS!
 							// XXX : IGNORE for 'END' and 'EQU', ...
 						}else{  // 1-D. NO SYMBOL, NO CMD!
 							printf("3ERROR!!!! LINE %lu\n", now->LINE_NUM);
 							OMGflag = true;
+							break;
 						}
 					}
 				}else{
@@ -184,24 +187,28 @@ bool assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
 						IF_OPCODE_OR_ASMDIR_DO  // if (above)
 						else{
 							printf("4ERROR!!!! LINE %lu\n", now->LINE_NUM);
+							size_t i = 0;
 							if(DEBUG_PRINT)
 								for(i=0;i<now->token_cnt;i++)
 									printf("<%s>\n",now->token_pass[i]);
 							
 							OMGflag = true;
+							break;
 						}
 					}else{
 						// rest of it would be 'DISP'.
 						// --------------------------------
 						if(hasOpcode){
-							if((OMGflag = assembler_pass1_got_opcode_check_disp(doc, now, i))){
+							if((OMGflag = assembler_pass1_got_opcode_check_disp(doc, now))){
 								printf("5ERROR!!!! LINE %lu\n", now->LINE_NUM);
+								break;
 							}
 						}else if(hasAsmdir){
 							// XXX : IGNORE for 'END' and 'EQU', ...
 						}else{
 							printf("6ERROR!!!! LINE %lu\n", now->LINE_NUM);
 							OMGflag = true;
+							break;
 						}
 						// --------------------------------
 					}
@@ -218,17 +225,17 @@ bool assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
 	return OMGflag;
 }
 
-bool assembler_pass1_got_opcode_check_disp(DOCUMENT *doc, NODE *now, size_t i){
+bool assembler_pass1_got_opcode_check_disp(DOCUMENT *doc, NODE *now){
 	bool OMGflag = false;
 	SYMBOL *new_symbol;
 
-	if(strcasecmp("X", now->token_pass[i]) == 0){
+	if(strcasecmp("X", now->token_pass[now->cur_token]) == 0){
 		(now->FLAGS)._X_ = true;
 		if(DEBUG_PRINT)
 			printf("_X_\t");
-	}else if(strcasecmp(".", now->token_pass[i]) == 0){
+	}else if(strcasecmp(".", now->token_pass[now->cur_token]) == 0){
 		// IGNORE COMMENT!
-	}else if((new_symbol = symbol_add(doc->symtab, now->token_pass[i], NULL)) != NULL){
+	}else if((new_symbol = symbol_add(doc->symtab, now->token_pass[now->cur_token], NULL)) != NULL){
 		now->DISP = new_symbol;
 		new_symbol = NULL;
 	}else{

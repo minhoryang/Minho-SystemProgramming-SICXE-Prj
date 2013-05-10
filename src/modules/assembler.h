@@ -7,16 +7,12 @@
 	#include "modules/optab.h"
 
 	typedef struct {
-  #ifdef SICXE
-		bool _N_;
-		bool _I_;
-  #endif
-		bool _X_;
-  #ifdef SICXE
-		bool _B_;
-		bool _P_;
-		bool _E_;
-  #endif
+		bool _N_,
+			 _I_,
+			 _X_,
+			 _B_,
+			 _P_,
+			 _E_;
 		bool RESERVED_SO_JMP_OBJ;  // NO NEED TO PRINT!
 		bool COMMENTED_SO_JMP_LST;
 	}Flag;
@@ -31,6 +27,7 @@
 		char *token_orig;
 		char **token_pass;
 		size_t token_cnt;
+		size_t cur_token;
 		size_t LINE_NUM;
 		size_t LOCATION_CNT;
 		size_t _size;
@@ -42,7 +39,7 @@
 		char *OBJECTCODE;
 
 		Flag FLAGS;
-		void (*GetSize)(struct _NODE *this);
+		//void (*GetSize)(struct _NODE *this);  //TODO
 	}NODE;
 
 	struct _SYMBOL{
@@ -62,7 +59,7 @@
 		NODE *cur_node;
 	};
 
-	typedef void (*ASMDirFunc)(DOCUMENT *, void *);
+	typedef void (*ASMDirFunc)(DOCUMENT *);
 	typedef struct {
 		Elem elem;
 		char name[7];
@@ -72,7 +69,7 @@
 
 	bool assembler_readline(char *, DOCUMENT *);
 	bool assembler_pass1(DOCUMENT *, Hash *, List *);
-	bool assembler_pass1_got_opcode_check_disp(DOCUMENT *doc, NODE *now, size_t i);
+	bool assembler_pass1_got_opcode_check_disp(DOCUMENT *doc, NODE *now);
 	bool assembler_make_lst(DOCUMENT *, char *);
 	void assembler_make_obj(DOCUMENT *, char *);
 	void assembler_obj_range_print(FILE *fp, Elem *start, Elem *end, size_t cnt);
@@ -93,12 +90,13 @@
 	void assembler_directives_unload(List *);
 	ASMDir *assembler_directives_search(List *, char *);
 
-	void assembler_directives_START(DOCUMENT *, void *);
-	void assembler_directives_END(DOCUMENT *, void *);
-	void assembler_directives_BYTE(DOCUMENT *, void *);
-	void assembler_directives_WORD(DOCUMENT *, void *);
-	void assembler_directives_RESB(DOCUMENT *, void *);
-	void assembler_directives_RESW(DOCUMENT *, void *);
+	void assembler_directives_START(DOCUMENT *);
+	void assembler_directives_END(DOCUMENT *);
+	void assembler_directives_BYTE(DOCUMENT *);
+	void assembler_directives_WORD(DOCUMENT *);
+	void assembler_directives_RESB(DOCUMENT *);
+	void assembler_directives_RESW(DOCUMENT *);
+	void assembler_directives_BASE(DOCUMENT *);
 #endif
 #ifndef src_modules_assembler_symbol
 	#define src_modules_assembler_symbol

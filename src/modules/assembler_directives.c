@@ -1,19 +1,21 @@
 List *assembler_directives_load(){
 	List *target = (List *)calloc(1, sizeof(List));
-	char wanted[6][7] = {"START", "END", "BYTE", "WORD", "RESB", "RESW"};
-	ASMDirFunc wanted_func[6] = {
+#define CNT 7
+	char wanted[CNT][7] = {"START", "END", "BYTE", "WORD", "RESB", "RESW", "BASE"};
+	ASMDirFunc wanted_func[CNT] = {
 		assembler_directives_START,
 		assembler_directives_END,
 		assembler_directives_BYTE,
 		assembler_directives_WORD,
 		assembler_directives_RESB,
-		assembler_directives_RESW};
-	size_t i, wanted_cnt = 6;
+		assembler_directives_RESW,
+		assembler_directives_BASE};
+	size_t i;
 	ASMDir *new;
 
 	list_init(target);
 
-	for(i = 0; i < wanted_cnt; i++){
+	for(i = 0; i < CNT; i++){
 		new = (ASMDir *)calloc(1, sizeof(ASMDir));
 		new->apply = wanted_func[i];
 		strcpy(new->name, wanted[i]);
@@ -46,50 +48,55 @@ ASMDir *assembler_directives_search(List *target, char *query){
 	return NULL;
 }
 
-void assembler_directives_START(DOCUMENT *doc, void *aux){
+void assembler_directives_START(DOCUMENT *doc){
 	doc->cur_node->FLAGS.RESERVED_SO_JMP_OBJ = true;
-	doc->base = (doc->prev_locctr = hex2int((char *)aux));
+	doc->base = (doc->prev_locctr = hex2int(doc->cur_node->token_pass[doc->cur_node->cur_token + 1]));
 	if(DEBUG_PRINT)
 		printf("Set Base @ %lu\t", doc->prev_locctr);
 	doc->progname = strdup(doc->cur_node->token_pass[0]);
 }
 
-void assembler_directives_END(DOCUMENT *doc, void *aux){
+void assembler_directives_END(DOCUMENT *doc){
 	doc->cur_node->FLAGS.RESERVED_SO_JMP_OBJ = true;
 	SYMBOL *wanted;
-	if((wanted = symbol_search(doc->symtab, (char *)aux)) != NULL){
+	if((wanted = symbol_search(doc->symtab, doc->cur_node->token_pass[doc->cur_node->cur_token + 1])) != NULL){
 		doc->end_addr = wanted->link->LOCATION_CNT;
 	}
 }
 
-void assembler_directives_BYTE(DOCUMENT *doc, void *aux){
-	doc->cur_node->_size = strlen((doc->cur_node->STORED_DATA = strdup((char *)aux))) / 2;
+void assembler_directives_BYTE(DOCUMENT *doc){
+	doc->cur_node->_size = strlen((doc->cur_node->STORED_DATA = strdup(doc->cur_node->token_pass[doc->cur_node->cur_token + 1]))) / 2;
 	if(DEBUG_PRINT)
 		printf("%lu:%s\t", doc->cur_node->_size, doc->cur_node->STORED_DATA);
 }
 
-void assembler_directives_WORD(DOCUMENT *doc, void *aux){
+void assembler_directives_WORD(DOCUMENT *doc){
 	doc->cur_node->_size = 3;
 	sprintf(
 		(doc->cur_node->STORED_DATA = (char *)calloc(7, sizeof(char))),
 		"%06X",
-		atoi((char *)aux)
+		atoi(doc->cur_node->token_pass[doc->cur_node->cur_token + 1])
 	);
 	if(DEBUG_PRINT)
 		printf("%lu:%s\t", doc->cur_node->_size, doc->cur_node->STORED_DATA);
 	
 }
 
-void assembler_directives_RESB(DOCUMENT *doc, void *aux){
+void assembler_directives_RESB(DOCUMENT *doc){
 	doc->cur_node->FLAGS.RESERVED_SO_JMP_OBJ = true;
-	sscanf((char *)aux, "%lu", &(doc->cur_node->_size));
+	sscanf(doc->cur_node->token_pass[doc->cur_node->cur_token + 1], "%lu", &(doc->cur_node->_size));
 	if(DEBUG_PRINT)
 		printf("%lu:%s\t", doc->cur_node->_size, doc->cur_node->STORED_DATA);
 }
 
-void assembler_directives_RESW(DOCUMENT *doc, void *aux){
+void assembler_directives_RESW(DOCUMENT *doc){
 	doc->cur_node->FLAGS.RESERVED_SO_JMP_OBJ = true;
-	doc->cur_node->_size = hex2int((char *)aux) * 3; 
+	doc->cur_node->_size = hex2int(doc->cur_node->token_pass[doc->cur_node->cur_token + 1]) * 3;
 	if(DEBUG_PRINT)
 		printf("%lu:%s\t", doc->cur_node->_size, doc->cur_node->STORED_DATA);
+}
+
+void assembler_directives_BASE(DOCUMENT *doc){
+	doc->cur_node->FLAGS.RESERVED_SO_JMP_OBJ = true;
+	// TODO
 }
