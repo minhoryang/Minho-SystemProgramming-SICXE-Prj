@@ -58,7 +58,7 @@
 			j = Tokenizer_FindQuotes(line, datas);
 			i = Tokenizer_NoComments(j); free(j);
 			j = Tokenizer_DeBlanks(i); free(i);
-			i = Tokenizer_NoSpecialChars(j); free(j);
+			i = Tokenizer_SICXE(j); free(j);
 			j = Tokenizer_FillQuotes(i, datas); free(i);
 			i = j;
 			DeAllocQuotes(datas);
@@ -142,8 +142,6 @@
 	}
 #endif
 
-char const Tokenizer_Allows[6] = {'#', '@', '.', '+', Tokenizer_Separator, Tokenizer_Quotes_Reservation};
-size_t const Tokenizer_Allows_Cnt = 6;
 char const Tokenizer_Blanks[5] = {' ', '\t', '\n', '\r', ','};
 size_t const Tokenizer_Blanks_Cnt = 5;
 
@@ -335,36 +333,21 @@ char *Tokenizer_DeBlanks(char* const line){
 	return result;
 }
 
-char *Tokenizer_NoSpecialChars(char * const line){
-	// XXX : Remove all not-allowed letters @ line.
+char *Tokenizer_SICXE(char * const line){
+	// XXX : Helper for SIC/XE.
 	char *now,
 	     *result = (char *)calloc(Tokenizer_Max_Length, sizeof(char));
 	size_t len_result = 0;
 
 	for(now = line; *now != '\0'; now++){  // for every letters..
-
-		// check if in alphabets.
-		if(('A' <= *now) && (*now <= 'Z')){
-			result[len_result++] = *now;
-		}else if(('a' <= *now) && (*now <= 'z')){
-			result[len_result++] = *now;
-		}else if(('0' <= *now) && (*now <= '9')){  // check if in numbers.
-			result[len_result++] = *now;
-		}else{  // check if in Tokenizer_Allows.
-			bool is_allowed = false;
-			size_t cur;
-			for(cur=0; cur<Tokenizer_Allows_Cnt; cur++){
-				if(Tokenizer_Allows[cur] == *now){
-					is_allowed = true;
-					break;
-				}
-			}
-			if(is_allowed){
+		switch(*now){
+			case '@':
+			case '#':
 				result[len_result++] = *now;
 				result[len_result++] = Tokenizer_Separator;
-			}else{
-				result[len_result++] = Tokenizer_Separator;
-			}
+				break;
+			default:
+				result[len_result++] = *now;
 		}
 	}
 	return result;
