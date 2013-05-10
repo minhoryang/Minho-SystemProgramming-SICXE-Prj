@@ -15,6 +15,10 @@ FILE *argument_file_opener(int argc, char *argv[]){
 	FILE *fp = stdin;
 	if(argc>1){
 		fp = fopen(argv[1], "r");
+		if(fp == NULL){
+			printf("Couldn't find that file.\n");
+			exit(1);
+		}
 	}
 	return fp;
 }
