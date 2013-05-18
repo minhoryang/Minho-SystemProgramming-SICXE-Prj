@@ -67,7 +67,7 @@ Environment *Shell_AllocateEnvironment(){
 	{
 		env->OP = OP_Alloc();
 		env->MN = MN_Alloc();
-		OPMN_Load(env->OP, env->MN);
+		OPMN_Load(env->OP, env->MN, NULL);
 	}
 	{
 		env->doc = NULL;
@@ -204,18 +204,21 @@ int Shell_MainLoop(Environment *env){
 						document_dealloc(env->doc);
 					if(!assembler_readline(env->tokens[1], (env->doc = document_alloc()))){
 						if(!assembler_pass1(env->doc, env->OP, env->asmdir)){
-							char *filename1 = strdup(env->doc->filename),
-								 *filename2 = strdup(env->doc->filename);
-							strcat(filename1, ".lst");
-							strcat(filename2, ".obj");
-							if(!assembler_make_lst(env->doc, filename1)){
-								assembler_make_obj(env->doc, filename2);
-								printf("\toutput file : [%s], [%s]\n", filename1, filename2);
-							}else{
-								remove(filename1);
-								remove(filename2);
+							if(!assembler_pass2(env->doc)){
+								char *filename1 = strdup(env->doc->filename),
+									 *filename2 = strdup(env->doc->filename);
+								strcat(filename1, ".lst");
+								strcat(filename2, ".obj");
+								if(!assembler_make_lst(env->doc, filename1)){
+									assembler_make_obj(env->doc, filename2);
+									printf("\toutput file : [%s], [%s]\n", filename1, filename2);
+								}else{
+									remove(filename1);
+									remove(filename2);
+									Shell_Exception(env);
+								}
+							}else
 								Shell_Exception(env);
-							}
 						}else
 							Shell_Exception(env);
 					}else

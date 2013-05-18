@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "core/argument.h"
 
 #ifdef argument_test

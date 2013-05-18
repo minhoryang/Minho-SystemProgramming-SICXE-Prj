@@ -8,8 +8,9 @@
 		unsigned char opcode;
 		HElem op_elem;
 		HElem mn_elem;
-		//
-		bool can_format[4];
+		size_t size;
+
+		void *Func;  // XXX (casting to NODEFunc).
 	}OPMNNode;
 
 	Hash *OP_Alloc();
@@ -25,8 +26,8 @@
 			const struct hash_elem *a,
 			const struct hash_elem *b,
 			void *aux);
-	void OPMN_Load(Hash *, Hash *);
-	void OPMN_Insert(Hash *, Hash *, char *opcode, char *mnemonic, bool *);
+	void OPMN_Load(Hash *, Hash *, void *);
+	void OPMN_Insert(Hash *, Hash *, char *opcode, char *mnemonic, size_t, void *);
 	void OP_List(Hash *what);
 	void MN_List(Hash *what);
 	OPMNNode *MN_Search(Hash *what, char *mnemonic);

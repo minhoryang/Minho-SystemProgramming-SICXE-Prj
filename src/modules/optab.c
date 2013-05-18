@@ -14,7 +14,7 @@
 	int main(){
 		Hash *OP = OP_Alloc(),
 			 *MN = MN_Alloc();
-		OPMN_Load(OP, MN);
+		OPMN_Load(OP, MN, NULL);
 		OP_List(OP);
 		MN_List(MN);
 		hash_destroy(OP, both_hash_destructor);
@@ -89,13 +89,13 @@ bool mn_less_func(
 	return false;
 }
 
-void OPMN_Load(Hash *OP, Hash *MN){
+void OPMN_Load(Hash *OP, Hash *MN, void *Func){
 	FILE *fp = fopen("opcode.txt", "r");
 	char *line = (char *)calloc(Tokenizer_Max_Length, sizeof(char)), **out;
 	size_t cnt;
 	while(fgets(line, Tokenizer_Max_Length, fp) != NULL){
 		if((cnt = Tokenizer(line, (out = AllocToken()), NONE))){
-			bool formats[4] = {false,};
+			size_t size = 0;
 			{  // OPCODE FORMAT HANDLER!
 				int a[4] = {0,},
 					n = sscanf(out[2],
@@ -104,15 +104,15 @@ void OPMN_Load(Hash *OP, Hash *MN){
 				{
 					int i;
 					for (i=0;i<n;i++)
-						if(1 <= a[i] && a[i] <= 4)
-							formats[a[i]-1] = true;
+						if(1 <= a[i] && a[i] <= 3)
+							size = a[i];
 				}
 				if(0)  // TODO(DEBUG)
 					printf("%lu %s %s (%d : %d %d %d %d)\n",
 						cnt, out[0], out[1],
 						n, a[0], a[1], a[2], a[3]);
 			}
-			OPMN_Insert(OP, MN, out[0], out[1], formats);
+			OPMN_Insert(OP, MN, out[0], out[1], size, Func);
 		}
 		DeAllocToken(out);
 	}
@@ -120,20 +120,12 @@ void OPMN_Load(Hash *OP, Hash *MN){
 	fclose(fp);
 }
 
-void OPMN_Insert(Hash *OP, Hash *MN, char *opcode, char *mnemonic, bool *formats){
+void OPMN_Insert(Hash *OP, Hash *MN, char *opcode, char *mnemonic, size_t size, void *Func){
 	OPMNNode *new = (OPMNNode *)calloc(1, sizeof(OPMNNode));
 	strncpy(new->mnemonic, mnemonic, strlen(mnemonic));
 	new->opcode = hex2int(opcode);
-	if(0)  // TODO(DEBUG)
-		printf("%s %s %s %s\n",
-			formats[0] ? "true" : "false",
-			formats[1] ? "true" : "false",
-			formats[2] ? "true" : "false",
-			formats[3] ? "true" : "false");
-	new->can_format[0] = formats[0];
-	new->can_format[1] = formats[1];
-	new->can_format[2] = formats[2];
-	new->can_format[3] = formats[3];
+	new->size = size;
+	new->Func = Func;
 	if(OP != NULL)
 		hash_insert(OP, &new->op_elem);
 	if(MN != NULL)

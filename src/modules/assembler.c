@@ -1,4 +1,5 @@
 #include <ctype.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -73,14 +74,7 @@ bool assembler_readline(char *filename, DOCUMENT *doc){
 						char *swap;
 						if(lineNumIn == reset){  // ONE-TIME-ONLY. Try to find LineNum at inputs.
 							if((doc->cur_node)->token_cnt > 0){
-								bool is_lineNum = true;
-								char *n;
-								for(n=(doc->cur_node)->token_pass[0]; *n != '\0'; n++){  // LineNum Checker.
-									is_lineNum &= (bool)isdigit(*n);
-									if(!is_lineNum)
-										break;
-								}
-								if(is_lineNum)
+								if(IsNumberOnly((doc->cur_node)->token_pass[0]))
 									lineNumIn = yes;
 								else
 									lineNumIn = no;
@@ -118,6 +112,17 @@ bool assembler_readline(char *filename, DOCUMENT *doc){
 	return false;
 }
 
+bool IsNumberOnly(char * input){  // TODO PULL THIS OUT!
+	bool is_lineNum = true;
+	char *n;
+	for(n=input; *n != '\0'; n++){  // LineNum Checker.
+		is_lineNum &= (bool)isdigit(*n);
+		if(!is_lineNum)
+			break;
+	}
+	return is_lineNum;
+}
+
 bool assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
 	// XXX : Pass 1.
 	Elem *find;
@@ -139,28 +144,36 @@ bool assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
 					if(!hasAsmdir && !hasOpcode){  // 1-A. NO SYMBOL & NO CMD
 						// need to find 'CMD' or 'SYMBOL'.
 #define IF_OPCODE_OR_ASMDIR_DO \
-						if((found_opcode = MN_Search(opcode, now->token_pass[now->cur_token])) != NULL){	\
+						if((found_opcode = MN_Search(opcode, CUR(now))) != NULL){	\
 							if(DEBUG_PRINT)	\
-								printf("OPCODE! %s\t", now->token_pass[now->cur_token]);	\
+								printf("OPCODE! %s\t", CUR(now));	\
 							hasOpcode = true;	\
 							now->OPCODE = found_opcode;	\
-							now->_size = 3;	\
-						}else if((found_asmdir = assembler_directives_search(asmdirs, now->token_pass[now->cur_token])) != NULL){	\
+							if(now->FLAGS._E_)	\
+								now->_size = 4;	\
+							else	\
+								now->_size = now->OPCODE->size; \
+							break;	\
+						}else if((found_asmdir = assembler_directives_search(asmdirs, CUR(now))) != NULL){	\
 							if(DEBUG_PRINT)	\
-								printf("ASMDIR! %s\t", now->token_pass[now->cur_token]);	\
+								printf("ASMDIR! %s\t", CUR(now));	\
 							hasAsmdir = true;	\
 							found_asmdir->apply(doc);	\
+							break;	\
+						}	\
+						else if(strcasecmp("+", CUR(now)) == 0){	\
+							now->FLAGS._E_ = true;	\
 						}  // SET AWESOME MACRO for REDUCING DUPLICATED AREA!
 
 						IF_OPCODE_OR_ASMDIR_DO  // if (above)
-						else if(strcasecmp(".", now->token_pass[now->cur_token]) == 0){
+						else if(strcasecmp(".", CUR(now)) == 0){
 							now->FLAGS.COMMENTED_SO_JMP_LST = true;
 							break;
 						}else{  // 1-A-d. << SHOULD BE SYMBOL >>
 							if(DEBUG_PRINT)
-								printf("SYMBOL! %s\t", now->token_pass[now->cur_token]);
+								printf("SYMBOL! %s\t", CUR(now));
 							hasSymbol = true;
-							if((new_symbol = symbol_add(doc->symtab, now->token_pass[now->cur_token], now)) != NULL){
+							if((new_symbol = symbol_add(doc->symtab, CUR(now), now)) != NULL){
 								now->Symbol = new_symbol;
 								new_symbol = NULL;
 							}else{
@@ -170,6 +183,7 @@ bool assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
 							}
 						}
 					}else{  // NO SYMBOL, GOT CMD.
+#ifdef DEPRECATED_SIC
 						if(hasOpcode){  // 1-B. NO SYMBOL, OPCODE WORKS!
 							if((OMGflag = assembler_pass1_got_opcode_check_disp(doc, now))){
 								break;
@@ -181,6 +195,7 @@ bool assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
 							OMGflag = true;
 							break;
 						}
+#endif
 					}
 				}else{
 					if(!hasAsmdir && !hasOpcode){
@@ -196,6 +211,7 @@ bool assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
 							break;
 						}
 					}else{
+#ifdef DEPRECATED_SIC
 						// rest of it would be 'DISP'.
 						// --------------------------------
 						if(hasOpcode){
@@ -211,6 +227,7 @@ bool assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
 							break;
 						}
 						// --------------------------------
+#endif
 					}
 				}
 			}
@@ -225,17 +242,18 @@ bool assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
 	return OMGflag;
 }
 
+#ifdef DEPRECATED_SIC
 bool assembler_pass1_got_opcode_check_disp(DOCUMENT *doc, NODE *now){
 	bool OMGflag = false;
 	SYMBOL *new_symbol;
 
-	if(strcasecmp("X", now->token_pass[now->cur_token]) == 0){
+	if(strcasecmp("X", CUR(now)) == 0){
 		(now->FLAGS)._X_ = true;
 		if(DEBUG_PRINT)
 			printf("_X_\t");
-	}else if(strcasecmp(".", now->token_pass[now->cur_token]) == 0){
+	}else if(strcasecmp(".", CUR(now)) == 0){
 		// IGNORE COMMENT!
-	}else if((new_symbol = symbol_add(doc->symtab, now->token_pass[now->cur_token], NULL)) != NULL){
+	}else if((new_symbol = symbol_add(doc->symtab, CUR(now), NULL)) != NULL){
 		now->DISP = new_symbol;
 		new_symbol = NULL;
 	}else{
@@ -243,6 +261,183 @@ bool assembler_pass1_got_opcode_check_disp(DOCUMENT *doc, NODE *now){
 		OMGflag = true;
 	}
 	return OMGflag;
+}
+#endif
+
+bool assembler_pass2(DOCUMENT *doc){
+	// XXX : Pass 2.
+	Elem *find;
+	bool OMGflag = false;
+
+	assembler_directives_BASE_TO_BE(doc, false);  // TODO ERROR HANDLING!
+
+	for(find = list_begin(doc->nodes);
+		find != list_end(doc->nodes);
+		find = list_next(find)){
+
+			NODE *now = (doc->cur_node = list_entry(find, NODE, elem));
+			if(now->OPCODE != NULL){
+				switch(now->_size){
+					case 1:
+						sprintf(now->OBJECTCODE, "%02X", now->OPCODE->opcode);
+						break;
+					case 2:
+						{
+							int a = 0, b = 0;
+							switch(now->token_cnt - (++now->cur_token)){
+								case 2:
+									a = assembler_get_value_from_register(CUR(now));
+									b = assembler_get_value_from_register(CUR2(now, 1));
+									break;
+								case 1:
+									a = assembler_get_value_from_register(CUR(now));
+									break;
+								default:
+									// TODO : ERROR!!!!
+									break;
+							}
+							sprintf(now->OBJECTCODE, "%02X%01X%01X", now->OPCODE->opcode, a, b);
+						}
+						break;
+					case 4:
+						now->FLAGS._E_ = true;
+						// XXX : Exception - [MODIFICATION]
+#define F4_EXC_MODIFY	if(now->FLAGS._E_){ \
+							if(value->where == FromSymbol){ \
+								MODIFY *md = (MODIFY *)calloc(1, sizeof(MODIFY)); \
+								md->target = now; \
+								md->more = NULL; \
+								list_push_back(doc->modtab, &(md->elem)); \
+							} \
+						}
+					case 3:
+						{
+							size_t need_to_find = assembler_pass2_set_flag(now);
+							DATA *value = NULL;
+							if(need_to_find != SIZE_MAX)
+								value = assembler_get_value_from_symbol_or_not(doc, now->token_pass[need_to_find]);
+							{
+								int disp = 0;
+								if(value){
+									disp = value->wanted;
+									if(value->where != Integer){
+										int PC = (now->LOCATION_CNT + now->_size);
+										if((-2048 <= disp - PC) && (disp - PC <= 2047)){
+											disp -= PC;
+											now->FLAGS._P_ = true;
+										}else if((doc->is_base == Set) && (0 <= disp - doc->base) && (disp - doc->base <= 4095)){
+											disp -= doc->base;
+											now->FLAGS._B_ = true;
+										}else{
+											// TODO ERROR!
+											assembler_pass2_debug_print(now);
+										}
+									}
+								}
+								assembler_pass2_object_print(now, disp);
+							}
+							F4_EXC_MODIFY // XXX : Exception - [MODIFICATION] @ FORMAT 4.
+						}
+						break;
+					default:
+						break;
+				}
+			}
+	}
+	doc->cur_node = NULL;
+	return OMGflag;
+}
+
+size_t assembler_pass2_set_flag(NODE *now){
+	size_t _data = SIZE_MAX;
+	now->FLAGS._I_ = true;
+	now->FLAGS._N_ = true;
+	for(++now->cur_token; now->cur_token < now->token_cnt; now->cur_token++){
+		if(strcasecmp("@", CUR(now)) == 0){
+			now->FLAGS._I_ = false;
+		}else if(strcasecmp("#", CUR(now)) == 0){
+			now->FLAGS._N_ = false;
+		}else if(strcasecmp("X", CUR(now)) == 0){
+			now->FLAGS._X_ = true;
+		}else{
+			_data = now->cur_token;
+		}
+	}
+	return _data;
+}
+
+void assembler_pass2_object_print(NODE *now, int data){
+	char buff[10] = {0,};
+	sprintf(buff, "%02X%01X",
+			now->OPCODE->opcode + 2 * now->FLAGS._N_ + now->FLAGS._I_,
+			8*now->FLAGS._X_ + 4*now->FLAGS._B_ + 2*now->FLAGS._P_ + now->FLAGS._E_);
+	if(!now->FLAGS._E_){
+		if(0 <= data){
+			sprintf(now->OBJECTCODE, "%s%03X", buff, data);
+		}else{
+			char t[9] = {0,};
+			sprintf(t, "%8X", data);
+			sprintf(now->OBJECTCODE, "%s%c%c%c", buff, t[5], t[6], t[7]);
+		}
+	}else{
+		if(0 <= data){
+			sprintf(now->OBJECTCODE, "%s%05X", buff, data);
+		}else{
+			char t[9] = {0,};
+			sprintf(t, "%8X", data);
+			sprintf(now->OBJECTCODE, "%s%c%c%c%c%c", buff, t[3], t[4], t[5], t[6], t[7]);
+		}
+	}
+}
+
+void assembler_pass2_debug_print(NODE *now){
+	sprintf(now->OBJECTCODE, "\t%c %c %c %c %c %c",
+			now->FLAGS._N_ ? 'N' : ' ',
+			now->FLAGS._I_ ? 'I' : ' ',
+			now->FLAGS._X_ ? 'X' : ' ',
+			now->FLAGS._B_ ? 'B' : ' ',
+			now->FLAGS._P_ ? 'P' : ' ',
+			now->FLAGS._E_ ? 'E' : ' ');
+}
+
+int assembler_get_value_from_register(char *this){
+	if(strcasecmp(this, "A") == 0){
+		return 0;
+	}else if(strcasecmp(this, "X") == 0){
+		return 1;
+	}else if(strcasecmp(this, "L") == 0){
+		return 2;
+	}else if(strcasecmp(this, "B") == 0){
+		return 3;
+	}else if(strcasecmp(this, "S") == 0){
+		return 4;
+	}else if(strcasecmp(this, "T") == 0){
+		return 5;
+	}else if(strcasecmp(this, "F") == 0){
+		return 6;
+	}else if(strcasecmp(this, "PC") == 0){
+		return 8;
+	}else if(strcasecmp(this, "SW") == 0){
+		return 9;
+	}
+	return -1;
+}
+
+DATA *assembler_get_value_from_symbol_or_not(DOCUMENT *doc, char *this){
+	DATA *new = (DATA *)calloc(1, sizeof(DATA));
+	list_push_back(doc->datas, &(new->elem));
+
+	SYMBOL *target = NULL;
+	if((target = symbol_search(doc->symtab, this)) != NULL){
+		new->wanted = target->link->LOCATION_CNT;
+		new->where = FromSymbol;
+	}else if (IsNumberOnly(this)){
+		sscanf(this, "%lu", &new->wanted);
+		new->where = Integer;
+	}else{
+		new->where = FAILED;
+	}
+	return new;
 }
 
 bool assembler_make_lst(DOCUMENT *doc, char *filename){
@@ -258,31 +453,8 @@ bool assembler_make_lst(DOCUMENT *doc, char *filename){
 				fprintf(fout, "%04X", (unsigned int)(now->LOCATION_CNT)); 
 			}
 			fprintf(fout, "\t%s\t", now->token_orig); 
-			if(now->STORED_DATA){
+			if(now->STORED_DATA != NULL)
 				sprintf(now->OBJECTCODE, "%s", now->STORED_DATA);
-			}else{
-				if(now->OPCODE){
-					if(now->DISP){
-						if(!now->DISP->link){
-							printf("7ERROR!!!! LINE %lu DISP %s\n", now->LINE_NUM, now->DISP->symbol);
-							return true;
-						}
-						if((now->FLAGS)._X_){
-							sprintf(now->OBJECTCODE,
-									"%02X%04X",
-									now->OPCODE->opcode,
-									(unsigned int)now->DISP->link->LOCATION_CNT + 0x8000);
-						}else{
-							sprintf(now->OBJECTCODE,
-									"%02X%04X",
-									now->OPCODE->opcode,
-									(unsigned int)now->DISP->link->LOCATION_CNT);
-						}
-					}else{
-						sprintf(now->OBJECTCODE, "%02X0000", now->OPCODE->opcode);
-					}
-				}
-			}
 			fprintf(fout, "%s", now->OBJECTCODE);
 			fprintf(fout, "\n");
 	}
@@ -298,7 +470,7 @@ void assembler_make_obj(DOCUMENT *doc, char *filename){
 	Elem *line_from = NULL, *line_end = NULL;
 	bool is_storing = false;
 
-	fprintf(fout, "H%-6s%06X%06X\n", doc->progname, (unsigned int)doc->base, (unsigned int)(doc->prev_locctr - doc->base));
+	fprintf(fout, "H%-6s%06X%06X\n", doc->progname, (unsigned int)doc->start_addr, (unsigned int)(doc->prev_locctr - doc->start_addr));
 
 	for(find = list_begin(doc->nodes);
 		find != list_end(doc->nodes);
@@ -335,6 +507,19 @@ void assembler_make_obj(DOCUMENT *doc, char *filename){
 		assembler_obj_range_print(fout, line_from, line_end, cnt);
 	}
 	doc->cur_node = NULL;
+	
+	for(find = list_begin(doc->modtab);
+		find != list_end(doc->modtab);
+		find = list_next(find)){
+			MODIFY *now = list_entry(find, MODIFY, elem);
+			char buff[81] = {0,};
+			sprintf(buff, "M%06X%02X", now->target->LOCATION_CNT + 1, 5);
+			if(now->more == NULL){
+				fprintf(fout, "%s\n", buff);
+			}else{
+				;  // TODO
+			}
+	}
 
 	fprintf(fout, "E%06X\n", (unsigned int)doc->end_addr);
 
@@ -363,6 +548,10 @@ DOCUMENT *document_alloc(){
 	list_init(new->nodes);
 	new->symtab = (List *)calloc(1, sizeof(List));
 	list_init(new->symtab);
+	new->datas = (List *)calloc(1, sizeof(List));
+	list_init(new->datas);
+	new->modtab = (List *)calloc(1, sizeof(List));
+	list_init(new->modtab);
 	new->filename = (char *)calloc(Tokenizer_Max_Length, sizeof(char));
 	return new;
 }
@@ -390,6 +579,26 @@ void document_dealloc(DOCUMENT *doc){
 			free(s);
 	}
 	free(doc->symtab);
+
+	for(find = list_begin(doc->datas);
+		find != list_end(doc->datas);
+		/* Do Nothing */){
+			DATA *s = list_entry(find, DATA, elem);
+			find = list_next(find);
+			free(s);
+	}
+	free(doc->datas);
+
+	for(find = list_begin(doc->modtab);
+		find != list_end(doc->modtab);
+		/* Do Nothing */){
+			MODIFY *s = list_entry(find, MODIFY, elem);
+			find = list_next(find);
+			if(s->more)
+				free(s->more);
+			free(s);
+	}
+	free(doc->modtab);
 
 	free(doc->filename);
 

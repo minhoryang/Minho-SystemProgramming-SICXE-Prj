@@ -57,8 +57,8 @@
 			Quotes *datas = AllocQuotes();
 			j = Tokenizer_FindQuotes(line, datas);
 			i = Tokenizer_NoComments(j); free(j);
-			j = Tokenizer_DeBlanks(i); free(i);
-			i = Tokenizer_SICXE(j); free(j);
+			j = Tokenizer_SICXE(i); free(i);
+			i = Tokenizer_DeBlanks(j); free(j);
 			j = Tokenizer_FillQuotes(i, datas); free(i);
 			i = j;
 			DeAllocQuotes(datas);
@@ -346,8 +346,17 @@ char *Tokenizer_SICXE(char * const line){
 				result[len_result++] = *now;
 				result[len_result++] = Tokenizer_Separator;
 				break;
+			case '+':
+			case '-':
+			case '*':
+			case '/':
+				result[len_result++] = Tokenizer_Separator;
+				result[len_result++] = *now;
+				result[len_result++] = Tokenizer_Separator;
+				break;
 			default:
 				result[len_result++] = *now;
+				break;
 		}
 	}
 	return result;

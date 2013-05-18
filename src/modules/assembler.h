@@ -6,7 +6,20 @@
 	#include "core/list.h"
 	#include "modules/optab.h"
 
-	typedef struct {
+	typedef struct _FLAG FLAG;
+	typedef struct _NODE NODE;
+	typedef struct _DOCUMENT DOCUMENT;
+	typedef struct _DATA DATA;
+	typedef struct _MODIFY MODIFY;
+	typedef struct _SYMBOL SYMBOL;
+	typedef struct _ASMDir ASMDir;
+	typedef enum { NotSet = 0, Set, UseSymbol } ThreeStates;
+	typedef enum { FAILED = -1, Integer, FromSymbol } From;
+	typedef void (*ASMDirFunc)(DOCUMENT *);
+	#define CUR2(A, B) (A->token_pass[A->cur_token + B])
+	#define CUR(A) CUR2(A, 0)
+
+	struct _FLAG{
 		bool _N_,
 			 _I_,
 			 _X_,
@@ -15,32 +28,36 @@
 			 _E_;
 		bool RESERVED_SO_JMP_OBJ;  // NO NEED TO PRINT!
 		bool COMMENTED_SO_JMP_LST;
-	}Flag;
+	};
 
-	typedef struct _DOCUMENT DOCUMENT;
-	typedef struct _SYMBOL SYMBOL;
-
-	typedef struct _NODE{
-		DOCUMENT *_PARENT;
+	struct _NODE{
 		Elem elem;
 
-		char *token_orig;
-		char **token_pass;
-		size_t token_cnt;
-		size_t cur_token;
-		size_t LINE_NUM;
-		size_t LOCATION_CNT;
-		size_t _size;
+		// for Tokenizer.
+		char *token_orig,
+			 **token_pass;
+		size_t token_cnt,
+			   cur_token;
 
+		// for PASS 1
+		size_t LINE_NUM,
+			   LOCATION_CNT,
+			   _size;
+		
+		// for PASS 2
+		char *STORED_DATA,
+			 *OBJECTCODE;
+
+		DOCUMENT *_PARENT;  // TODO
 		SYMBOL *Symbol;
 		OPMNNode *OPCODE;
-		char *STORED_DATA;
-		SYMBOL *DISP;
-		char *OBJECTCODE;
+		FLAG FLAGS;
 
-		Flag FLAGS;
-		//void (*GetSize)(struct _NODE *this);  //TODO
-	}NODE;
+#ifdef DEPRECATED_SIC
+		SYMBOL *DISP;
+#endif
+
+	};
 
 	struct _SYMBOL{
 		Elem elem;
@@ -49,27 +66,58 @@
 	};
 
 	struct _DOCUMENT{
+		// for Base.
 		size_t base;
-		char *filename;
-		char *progname;
-		size_t prev_locctr;
-		size_t end_addr;
-		List *nodes;
-		List *symtab;
+		ThreeStates is_base;
+		NODE *to_base;
+
+		char *filename,
+			 *progname;
+		size_t start_addr, end_addr;
+
+		List *nodes,
+			 *symtab,
+			 *datas,
+			 *modtab;
+
+		// for Current.
 		NODE *cur_node;
+		size_t prev_locctr;
 	};
 
-	typedef void (*ASMDirFunc)(DOCUMENT *);
-	typedef struct {
+	struct _DATA{
+		Elem elem;
+		size_t wanted;
+		From where;
+	};
+
+	struct _MODIFY_DATA{
+		bool is_plus;
+	};
+	struct _MODIFY{
+		Elem elem;
+		NODE *target;
+		struct _MODIFY_DATA *more;
+	};
+
+	struct _ASMDir{
 		Elem elem;
 		char name[7];
 		ASMDirFunc apply;
-	}ASMDir;
-
+	};
 
 	bool assembler_readline(char *, DOCUMENT *);
+	bool IsNumberOnly(char * input);
 	bool assembler_pass1(DOCUMENT *, Hash *, List *);
-	bool assembler_pass1_got_opcode_check_disp(DOCUMENT *doc, NODE *now);
+#ifdef DEPRECATED_SIC
+		//bool assembler_pass1_got_opcode_check_disp(DOCUMENT *doc, NODE *now);
+#endif
+	bool assembler_pass2(DOCUMENT *doc);
+	size_t assembler_pass2_set_flag(NODE *now);
+	void assembler_pass2_object_print(NODE *now, int data);
+	void assembler_pass2_debug_print(NODE *now);
+	int assembler_get_value_from_register(char *this);
+	DATA *assembler_get_value_from_symbol_or_not(DOCUMENT *, char *);
 	bool assembler_make_lst(DOCUMENT *, char *);
 	void assembler_make_obj(DOCUMENT *, char *);
 	void assembler_obj_range_print(FILE *fp, Elem *start, Elem *end, size_t cnt);
@@ -78,7 +126,6 @@
 	void document_dealloc(DOCUMENT *);
 	NODE *node_alloc();
 	void node_dealloc(NODE *);
-
 #endif
 #ifndef src_modules_assembler_directives
 	#define src_modules_assembler_directives
@@ -97,6 +144,7 @@
 	void assembler_directives_RESB(DOCUMENT *);
 	void assembler_directives_RESW(DOCUMENT *);
 	void assembler_directives_BASE(DOCUMENT *);
+	void assembler_directives_BASE_TO_BE(DOCUMENT *, bool);
 #endif
 #ifndef src_modules_assembler_symbol
 	#define src_modules_assembler_symbol
