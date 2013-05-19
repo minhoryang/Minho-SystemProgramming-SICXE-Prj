@@ -170,7 +170,7 @@ bool assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
 				bool hasSymbol = false, hasAsmdir = false, hasOpcode = false;
 				NODE *now = (blk->cur_node = list_entry(find_node, NODE, elem));
 	
-				now->Literal = literal_detect(doc); // TODO!
+				now->Literal = literal_detect(doc);
 	
 				for(now->cur_token = 0; now->cur_token < now->token_cnt; now->cur_token++){
 					OPMNNode *found_opcode;
@@ -246,6 +246,8 @@ bool assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
 		doc->prev_base = blk->prev_locctr;
 		blk->SIZE = blk->prev_locctr - blk->BASE;
 		blk->cur_node = NULL;
+		if(OMGflag)
+			break;
 	}
 	doc->cur_block = NULL;
 	return OMGflag;
@@ -256,7 +258,8 @@ bool assembler_pass2(DOCUMENT *doc){
 	Elem *find_block;
 	bool OMGflag = false;
 
-	assembler_directives_BASE_TO_BE(doc, false);  // TODO ERROR HANDLING!
+	if(!assembler_directives_BASE_TO_BE(doc, false))
+		printf("ERR! couldn't calc BASE\n");
 
 	for(find_block = list_begin(doc->blocks);
 		find_block != list_end(doc->blocks);
@@ -287,7 +290,8 @@ bool assembler_pass2(DOCUMENT *doc){
 										a = assembler_get_value_from_register(CUR(now));
 										break;
 									default:
-										// TODO : ERROR!!!!
+										printf("ERR! FORMAT2, no value?\n");
+										OMGflag = true;
 										break;
 								}
 								sprintf(now->OBJECTCODE, "%02X%01X%01X", now->OPCODE->opcode, a, b);
@@ -335,8 +339,10 @@ bool assembler_pass2(DOCUMENT *doc){
 													now->FLAGS._B_ = true;
 												}else F4_DISP_COND  // XXX : DISP @ FORMAT 4.
 												else{
-													// TODO ERROR!
-													assembler_pass2_debug_print(now);
+													printf("ERR! FORMAT3/4, FAILED TO CALC DISP!\n");
+													OMGflag = true;
+													break;
+													//assembler_pass2_debug_print(now);
 												}
 											}
 										}
@@ -350,8 +356,12 @@ bool assembler_pass2(DOCUMENT *doc){
 							break;
 					}
 				}
+				if(OMGflag)
+					break;
 		}
 		blk->cur_node = NULL;
+		if(OMGflag)
+			break;
 	}
 	doc->cur_block = NULL;
 	return OMGflag;

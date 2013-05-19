@@ -64,7 +64,7 @@ void assembler_directives_END(DOCUMENT *doc){
 	if((wanted = symbol_search(doc->symtab, CUR2(doc->cur_block->cur_node, 1))) != NULL){
 		doc->end_addr = wanted->link->LOCATION_CNT;
 	}
-	literal_flush(doc);  // TODO
+	literal_flush(doc);
 }
 
 void assembler_directives_BYTE(DOCUMENT *doc){
@@ -103,7 +103,7 @@ void assembler_directives_BASE(DOCUMENT *doc){
 	assembler_directives_BASE_TO_BE(doc, true);
 }
 
-void assembler_directives_BASE_TO_BE(DOCUMENT *doc, bool first){
+bool assembler_directives_BASE_TO_BE(DOCUMENT *doc, bool first){
 	DATA *got;
 	// TODO : Refactoring Needed!
 	if(first){
@@ -120,6 +120,7 @@ void assembler_directives_BASE_TO_BE(DOCUMENT *doc, bool first){
 			got = assembler_get_value_from_symbol_or_not(doc, CUR2(doc->to_base, 1));
 			if(got->where == FAILED){
 				printf("ERR!!!!!!!!!!!!!!!");
+				return false;
 			}else{
 				doc->is_base = Set;
 				doc->base = got->wanted;
@@ -128,6 +129,7 @@ void assembler_directives_BASE_TO_BE(DOCUMENT *doc, bool first){
 	}
 	if(DEBUG_PRINT)
 		printf("[[[%lu]]]\t", doc->base);
+	return true;
 }
 
 void assembler_directives_EQU(DOCUMENT *doc){
@@ -165,7 +167,7 @@ int plus_minus_shit_parade(DOCUMENT *doc){
 			DATA *got = assembler_get_value_from_symbol_or_not(doc, CUR(now));
 			switch(got->where){
 				case FAILED:
-					printf("ERRRRRRRR!\n");  // TODO!
+					printf("ERR! CALC FAILED!!\n");
 					break;
 				case Integer:
 				case Symbol:

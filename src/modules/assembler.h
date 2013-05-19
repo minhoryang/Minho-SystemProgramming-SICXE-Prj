@@ -167,7 +167,7 @@
 	void assembler_directives_RESB(DOCUMENT *);
 	void assembler_directives_RESW(DOCUMENT *);
 	void assembler_directives_BASE(DOCUMENT *);
-	void assembler_directives_BASE_TO_BE(DOCUMENT *, bool);
+	bool assembler_directives_BASE_TO_BE(DOCUMENT *, bool);
 	void assembler_directives_EQU(DOCUMENT *);
 	void assembler_directives_LTORG(DOCUMENT *);
 	void assembler_directives_USE(DOCUMENT *);
