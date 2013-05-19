@@ -1,4 +1,4 @@
-#define DEBUG_PRINT false  // TODO : DO NOT COMMIT WITH 'true'!!!!!!!!!!!!!
+#define DEBUG_PRINT true  // TODO : DO NOT COMMIT WITH 'true'!!!!!!!!!!!!!
 
 #ifndef src_modules_assembler
 	#define src_modules_assembler
@@ -12,6 +12,8 @@
 	typedef struct _DATA DATA;
 	typedef struct _MODIFY MODIFY;
 	typedef struct _SYMBOL SYMBOL;
+	typedef struct _LITERAL LITERAL;
+	typedef struct _LITERAL_USER;
 	typedef struct _ASMDir ASMDir;
 	typedef enum { NotSet = 0, Set, UseSymbol } ThreeStates;
 	typedef enum { FAILED = -1, Integer, FromSymbol } From;
@@ -100,6 +102,16 @@
 		struct _MODIFY_DATA *more;
 	};
 
+	struct _LITERAL_USER{
+		Elem elem;
+		NODE *who;
+	};
+	struct _LITERAL{
+		Elem elem;
+		char *name;
+		List users;  // <- _LITERAL_USER
+	};
+
 	struct _ASMDir{
 		Elem elem;
 		char name[7];
@@ -145,6 +157,8 @@
 	void assembler_directives_RESW(DOCUMENT *);
 	void assembler_directives_BASE(DOCUMENT *);
 	void assembler_directives_BASE_TO_BE(DOCUMENT *, bool);
+	void assembler_directives_EQU(DOCUMENT *);
+	void assembler_directives_LTORG(DOCUMENT *);
 #endif
 #ifndef src_modules_assembler_symbol
 	#define src_modules_assembler_symbol

@@ -302,6 +302,9 @@ bool assembler_pass2(DOCUMENT *doc){
 					case 4:
 						now->FLAGS._E_ = true;
 						// XXX : Exception - [MODIFICATION]
+#define F4_DISP_COND	if(now->FLAGS._E_){ \
+							; \
+						}
 #define F4_EXC_MODIFY	if(now->FLAGS._E_){ \
 							if(value->where == FromSymbol){ \
 								MODIFY *md = (MODIFY *)calloc(1, sizeof(MODIFY)); \
@@ -328,7 +331,8 @@ bool assembler_pass2(DOCUMENT *doc){
 										}else if((doc->is_base == Set) && (0 <= disp - doc->base) && (disp - doc->base <= 4095)){
 											disp -= doc->base;
 											now->FLAGS._B_ = true;
-										}else{
+										}else F4_DISP_COND  // XXX : DISP @ FORMAT 4.
+										else{
 											// TODO ERROR!
 											assembler_pass2_debug_print(now);
 										}
@@ -513,7 +517,7 @@ void assembler_make_obj(DOCUMENT *doc, char *filename){
 		find = list_next(find)){
 			MODIFY *now = list_entry(find, MODIFY, elem);
 			char buff[81] = {0,};
-			sprintf(buff, "M%06X%02X", now->target->LOCATION_CNT + 1, 5);
+			sprintf(buff, "M%06X%02X", (unsigned int)now->target->LOCATION_CNT + 1, 5);
 			if(now->more == NULL){
 				fprintf(fout, "%s\n", buff);
 			}else{
