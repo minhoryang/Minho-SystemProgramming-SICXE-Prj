@@ -323,6 +323,7 @@ bool assembler_pass2(DOCUMENT *doc){
 								if(need_to_find != SIZE_MAX)
 									value = assembler_get_value_from_symbol_or_not(doc, now->token_pass[need_to_find]);
 							}else{
+								assembler_pass2_set_flag(now);
 								value = (DATA *)calloc(1, sizeof(DATA));
 								value->where = Literal;
 								value->wanted = now->Literal->where->LOCATION_CNT;
