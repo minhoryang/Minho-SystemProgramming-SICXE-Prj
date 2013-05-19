@@ -275,10 +275,10 @@ void Shell_Help(){
 	printf("mnemonic\n");
 	printf("opcodelist\n");
 	printf("mnemoniclist\n");
-	printf("assemble\n");
-	printf("type\n");
+	printf("assemble filename\n");
+	printf("type filename\n");
 	printf("symbol\n");
-	printf("disassemble\n");
+	printf("disassemble filename\n");
 }
 
 void Shell_Exception(Environment *env){
