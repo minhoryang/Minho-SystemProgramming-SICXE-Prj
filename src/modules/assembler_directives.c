@@ -1,7 +1,7 @@
 	List *assembler_directives_load(){
 	List *target = (List *)calloc(1, sizeof(List));
-#define CNT 7
-	char wanted[CNT][7] = {"START", "END", "BYTE", "WORD", "RESB", "RESW", "BASE"};
+#define CNT 9
+	char wanted[CNT][7] = {"START", "END", "BYTE", "WORD", "RESB", "RESW", "BASE", "EQU", "LTORG"};
 	ASMDirFunc wanted_func[CNT] = {
 		assembler_directives_START,
 		assembler_directives_END,
@@ -9,7 +9,9 @@
 		assembler_directives_WORD,
 		assembler_directives_RESB,
 		assembler_directives_RESW,
-		assembler_directives_BASE};
+		assembler_directives_BASE,
+		assembler_directives_EQU,
+		assembler_directives_LTORG};
 	size_t i;
 	ASMDir *new;
 
@@ -125,4 +127,12 @@ void assembler_directives_BASE_TO_BE(DOCUMENT *doc, bool first){
 	}
 	if(DEBUG_PRINT)
 		printf("[[[%lu]]]\t", doc->base);
+}
+
+void assembler_directives_EQU(DOCUMENT *doc){
+	;
+}
+
+void assembler_directives_LTORG(DOCUMENT *doc){
+	;
 }
