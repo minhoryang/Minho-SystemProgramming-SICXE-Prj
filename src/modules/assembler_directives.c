@@ -51,7 +51,6 @@ ASMDir *assembler_directives_search(List *target, char *query){
 }
 
 void assembler_directives_START(DOCUMENT *doc){
-	doc->cur_node->FLAGS.RESERVED_SO_JMP_OBJ = true;
 	doc->start_addr = (doc->prev_locctr = hex2int(CUR2(doc->cur_node, 1)));
 	if(DEBUG_PRINT)
 		printf("Set Base @ %lu\t", doc->prev_locctr);
@@ -59,7 +58,6 @@ void assembler_directives_START(DOCUMENT *doc){
 }
 
 void assembler_directives_END(DOCUMENT *doc){
-	doc->cur_node->FLAGS.RESERVED_SO_JMP_OBJ = true;
 	SYMBOL *wanted;
 	if((wanted = symbol_search(doc->symtab, CUR2(doc->cur_node, 1))) != NULL){
 		doc->end_addr = wanted->link->LOCATION_CNT;
