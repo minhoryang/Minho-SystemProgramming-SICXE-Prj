@@ -1,4 +1,4 @@
-#define DEBUG_PRINT true  // TODO : DO NOT COMMIT WITH 'true'!!!!!!!!!!!!!
+#define DEBUG_PRINT false  // TODO : DO NOT COMMIT WITH 'true'!!!!!!!!!!!!!
 
 #ifndef src_modules_assembler
 	#define src_modules_assembler
@@ -13,10 +13,10 @@
 	typedef struct _MODIFY MODIFY;
 	typedef struct _SYMBOL SYMBOL;
 	typedef struct _LITERAL LITERAL;
-	typedef struct _LITERAL_USER;
+	typedef struct _LITERAL_USER LITUSER;
 	typedef struct _ASMDir ASMDir;
 	typedef enum { NotSet = 0, Set, UseSymbol } ThreeStates;
-	typedef enum { FAILED = -1, Integer, FromSymbol } From;
+	typedef enum { FAILED = -1, Integer, Symbol, Literal} From;
 	typedef void (*ASMDirFunc)(DOCUMENT *);
 	#define CUR2(A, B) (A->token_pass[A->cur_token + B])
 	#define CUR(A) CUR2(A, 0)
@@ -52,6 +52,7 @@
 
 		DOCUMENT *_PARENT;  // TODO
 		SYMBOL *Symbol;
+		LITERAL *Literal;
 		OPMNNode *OPCODE;
 		FLAG FLAGS;
 
@@ -80,7 +81,8 @@
 		List *nodes,
 			 *symtab,
 			 *datas,
-			 *modtab;
+			 *modtab,
+			 *littab;
 
 		// for Current.
 		NODE *cur_node;
@@ -102,14 +104,11 @@
 		struct _MODIFY_DATA *more;
 	};
 
-	struct _LITERAL_USER{
-		Elem elem;
-		NODE *who;
-	};
 	struct _LITERAL{
 		Elem elem;
 		char *name;
-		List users;  // <- _LITERAL_USER
+		bool done;
+		NODE *where;
 	};
 
 	struct _ASMDir{
@@ -171,3 +170,12 @@
 	#define src_modules_disassembler
 	bool disassembler(char *filename, Hash *mn);
 #endif
+#ifndef src_modules_assembler_literal
+	#define src_modules_assembler_literal
+	LITERAL *literal_add(List *littab, char *query);
+	LITERAL *literal_search(List *littab, char *query);
+	LITERAL *literal_detect(DOCUMENT *doc);
+	void literal_flush(DOCUMENT *doc);
+	LITERAL *literal_dealloc(DOCUMENT *doc);
+#endif
+

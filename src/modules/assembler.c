@@ -135,6 +135,8 @@ bool assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
 			bool hasSymbol = false, hasAsmdir = false, hasOpcode = false;
 			NODE *now = (doc->cur_node = list_entry(find, NODE, elem));
 
+			now->Literal = literal_detect(doc);
+
 			for(now->cur_token = 0; now->cur_token < now->token_cnt; now->cur_token++){
 				OPMNNode *found_opcode;
 				ASMDir *found_asmdir;
@@ -306,7 +308,7 @@ bool assembler_pass2(DOCUMENT *doc){
 							; \
 						}
 #define F4_EXC_MODIFY	if(now->FLAGS._E_){ \
-							if(value->where == FromSymbol){ \
+							if(value->where == Symbol){ \
 								MODIFY *md = (MODIFY *)calloc(1, sizeof(MODIFY)); \
 								md->target = now; \
 								md->more = NULL; \
@@ -315,26 +317,34 @@ bool assembler_pass2(DOCUMENT *doc){
 						}
 					case 3:
 						{
-							size_t need_to_find = assembler_pass2_set_flag(now);
 							DATA *value = NULL;
-							if(need_to_find != SIZE_MAX)
-								value = assembler_get_value_from_symbol_or_not(doc, now->token_pass[need_to_find]);
+							if(now->Literal == NULL){
+								size_t need_to_find = assembler_pass2_set_flag(now);
+								if(need_to_find != SIZE_MAX)
+									value = assembler_get_value_from_symbol_or_not(doc, now->token_pass[need_to_find]);
+							}else{
+								value = (DATA *)calloc(1, sizeof(DATA));
+								value->where = Literal;
+								value->wanted = now->Literal->where->LOCATION_CNT;
+							}
 							{
 								int disp = 0;
 								if(value){
-									disp = value->wanted;
-									if(value->where != Integer){
-										int PC = (now->LOCATION_CNT + now->_size);
-										if((-2048 <= disp - PC) && (disp - PC <= 2047)){
-											disp -= PC;
-											now->FLAGS._P_ = true;
-										}else if((doc->is_base == Set) && (0 <= disp - doc->base) && (disp - doc->base <= 4095)){
-											disp -= doc->base;
-											now->FLAGS._B_ = true;
-										}else F4_DISP_COND  // XXX : DISP @ FORMAT 4.
-										else{
-											// TODO ERROR!
-											assembler_pass2_debug_print(now);
+									if(value->where != FAILED){
+										disp = value->wanted;
+										if(value->where != Integer){
+											int PC = (now->LOCATION_CNT + now->_size);
+											if((-2048 <= disp - PC) && (disp - PC <= 2047)){
+												disp -= PC;
+												now->FLAGS._P_ = true;
+											}else if((doc->is_base == Set) && (0 <= disp - doc->base) && (disp - doc->base <= 4095)){
+												disp -= doc->base;
+												now->FLAGS._B_ = true;
+											}else F4_DISP_COND  // XXX : DISP @ FORMAT 4.
+											else{
+												// TODO ERROR!
+												assembler_pass2_debug_print(now);
+											}
 										}
 									}
 								}
@@ -434,7 +444,7 @@ DATA *assembler_get_value_from_symbol_or_not(DOCUMENT *doc, char *this){
 	SYMBOL *target = NULL;
 	if((target = symbol_search(doc->symtab, this)) != NULL){
 		new->wanted = target->link->LOCATION_CNT;
-		new->where = FromSymbol;
+		new->where = Symbol;
 	}else if (IsNumberOnly(this)){
 		sscanf(this, "%lu", &new->wanted);
 		new->where = Integer;
@@ -452,7 +462,9 @@ bool assembler_make_lst(DOCUMENT *doc, char *filename){
 		find != list_end(doc->nodes);
 		find = list_next(find)){
 			NODE *now = (doc->cur_node = list_entry(find, NODE, elem));
-			fprintf(fout, "%5lu\t", now->LINE_NUM); 
+			if(now->LINE_NUM != 0)
+				fprintf(fout, "%5lu", now->LINE_NUM); 
+			fprintf(fout, "\t"); 
 			if(!now->FLAGS.COMMENTED_SO_JMP_LST){
 				fprintf(fout, "%04X", (unsigned int)(now->LOCATION_CNT)); 
 			}
@@ -556,6 +568,8 @@ DOCUMENT *document_alloc(){
 	list_init(new->datas);
 	new->modtab = (List *)calloc(1, sizeof(List));
 	list_init(new->modtab);
+	new->littab = (List *)calloc(1, sizeof(List));
+	list_init(new->littab);
 	new->filename = (char *)calloc(Tokenizer_Max_Length, sizeof(char));
 	return new;
 }
@@ -604,6 +618,16 @@ void document_dealloc(DOCUMENT *doc){
 	}
 	free(doc->modtab);
 
+	for(find = list_begin(doc->littab);
+		find != list_end(doc->littab);
+		/* Do Nothing */){
+			LITERAL *s = list_entry(find, LITERAL, elem);
+			find = list_next(find);
+			// TODO REMOVE USER!
+			free(s);
+	}
+	free(doc->littab);
+
 	free(doc->filename);
 
 	free(doc);  // Dealloc Document.
@@ -633,3 +657,4 @@ void node_dealloc(NODE *node){
 #include "modules/assembler_directives.c"
 #include "modules/assembler_symbol.c"
 #include "modules/disassembler.c"
+#include "modules/assembler_literal.c"

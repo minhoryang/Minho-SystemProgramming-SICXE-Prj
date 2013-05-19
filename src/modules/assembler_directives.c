@@ -64,6 +64,7 @@ void assembler_directives_END(DOCUMENT *doc){
 	if((wanted = symbol_search(doc->symtab, CUR2(doc->cur_node, 1))) != NULL){
 		doc->end_addr = wanted->link->LOCATION_CNT;
 	}
+	literal_flush(doc);
 }
 
 void assembler_directives_BYTE(DOCUMENT *doc){
@@ -134,5 +135,5 @@ void assembler_directives_EQU(DOCUMENT *doc){
 }
 
 void assembler_directives_LTORG(DOCUMENT *doc){
-	;
+	literal_flush(doc);
 }
