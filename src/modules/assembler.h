@@ -171,6 +171,7 @@
 	void assembler_directives_EQU(DOCUMENT *);
 	void assembler_directives_LTORG(DOCUMENT *);
 	void assembler_directives_USE(DOCUMENT *);
+	void assembler_directives_ORG(DOCUMENT *);
 	int plus_minus_shit_parade(DOCUMENT *);  // TODO MOVE!
 #endif
 #ifndef src_modules_assembler_symbol
