@@ -76,7 +76,7 @@ void assembler_directives_WORD(DOCUMENT *doc){
 	sprintf(
 		(doc->cur_node->STORED_DATA = (char *)calloc(7, sizeof(char))),
 		"%06X",
-		atoi(CUR2(doc->cur_node, 1))
+		plus_minus_shit_parade(doc)
 	);
 	if(DEBUG_PRINT)
 		printf("%lu:%s\t", doc->cur_node->_size, doc->cur_node->STORED_DATA);
