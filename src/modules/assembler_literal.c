@@ -22,8 +22,8 @@ LITERAL *literal_search(List *littab, char *query){
 	return NULL;
 }
 
-LITERAL *literal_detect(DOCUMENT *doc){
-	NODE *now = doc->cur_block->cur_node;
+LITERAL *literal_detect(CSECT *csect){
+	NODE *now = csect->cur_block->cur_node;
 	bool is_found = false;
 	for(now->cur_token = 0; now->cur_token < now->token_cnt; now->cur_token++)
 		if(strcasecmp(CUR(now), "=") == 0){
@@ -31,35 +31,35 @@ LITERAL *literal_detect(DOCUMENT *doc){
 			break;
 		}
 	if(is_found)
-		return literal_add(doc->littab, CUR2(now, 1));
+		return literal_add(csect->littab, CUR2(now, 1));
 	return NULL;
 }
 
-void literal_flush(DOCUMENT *doc){
+void literal_flush(CSECT *csect){
 	NODE *new;
 	Elem *find;
-	for(find = list_begin(doc->littab);
-		find != list_end(doc->littab);
+	for(find = list_begin(csect->littab);
+		find != list_end(csect->littab);
 		find = list_next(find)){
 			LITERAL *this = list_entry(find, LITERAL, elem);
 			if(!this->done){
 				this->done = true;
 				new = node_alloc();
-				new->_PARENT = doc->cur_block;
+				new->_PARENT = csect->cur_block;
 				this->where = new;
 				sprintf(new->token_orig, "\t=X'%s'", this->name);
 				new->STORED_DATA = strdup(this->name);  // TODO!
 				new->_size = strlen(this->name)/2;
 				/*{
-					doc->cur_block->cur_node->LOCATION_CNT = doc->cur_block->prev_locctr;
-					doc->cur_block->prev_locctr = doc->cur_block->cur_node->LOCATION_CNT + doc->cur_block->cur_node->_size;
+					csect->cur_block->cur_node->LOCATION_CNT = csect->cur_block->prev_locctr;
+					csect->cur_block->prev_locctr = csect->cur_block->cur_node->LOCATION_CNT + csect->cur_block->cur_node->_size;
 				}*/
-				list_insert((doc->cur_block->cur_node->elem.next), &(new->elem));
-				doc->cur_block->cur_node = new;
+				list_insert((csect->cur_block->cur_node->elem.next), &(new->elem));
+				csect->cur_block->cur_node = new;
 			}
 	}
 }
 
-LITERAL *literal_dealloc(DOCUMENT *doc){
+LITERAL *literal_dealloc(CSECT *csect){
 	return NULL;
 }

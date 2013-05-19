@@ -52,102 +52,102 @@ ASMDir *assembler_directives_search(List *target, char *query){
 	return NULL;
 }
 
-void assembler_directives_START(DOCUMENT *doc){
-	doc->start_addr = (doc->prev_base = hex2int(CUR2(doc->cur_block->cur_node, 1)));
+void assembler_directives_START(CSECT *csect){
+	csect->start_addr = (csect->prev_base = hex2int(CUR2(csect->cur_block->cur_node, 1)));
 	if(DEBUG_PRINT)
-		printf("Set Base @ %lu\t", doc->cur_block->prev_locctr);
-	doc->progname = strdup(doc->cur_block->cur_node->token_pass[0]);
+		printf("Set Base @ %lu\t", csect->cur_block->prev_locctr);
+	csect->progname = strdup(csect->cur_block->cur_node->token_pass[0]);
 }
 
-void assembler_directives_END(DOCUMENT *doc){
+void assembler_directives_END(CSECT *csect){
 	SYMBOL *wanted;
-	if((wanted = symbol_search(doc->symtab, CUR2(doc->cur_block->cur_node, 1))) != NULL){
-		doc->end_addr = wanted->link->LOCATION_CNT;
+	if((wanted = symbol_search(csect->symtab, CUR2(csect->cur_block->cur_node, 1))) != NULL){
+		csect->end_addr = wanted->link->LOCATION_CNT;
 	}
-	literal_flush(doc);
+	literal_flush(csect);
 }
 
-void assembler_directives_BYTE(DOCUMENT *doc){
-	doc->cur_block->cur_node->_size = strlen((doc->cur_block->cur_node->STORED_DATA = strdup(CUR2(doc->cur_block->cur_node, 1)))) / 2;
+void assembler_directives_BYTE(CSECT *csect){
+	csect->cur_block->cur_node->_size = strlen((csect->cur_block->cur_node->STORED_DATA = strdup(CUR2(csect->cur_block->cur_node, 1)))) / 2;
 	if(DEBUG_PRINT)
-		printf("%lu:%s\t", doc->cur_block->cur_node->_size, doc->cur_block->cur_node->STORED_DATA);
+		printf("%lu:%s\t", csect->cur_block->cur_node->_size, csect->cur_block->cur_node->STORED_DATA);
 }
 
-void assembler_directives_WORD(DOCUMENT *doc){
-	doc->cur_block->cur_node->_size = 3;
+void assembler_directives_WORD(CSECT *csect){
+	csect->cur_block->cur_node->_size = 3;
 	sprintf(
-		(doc->cur_block->cur_node->STORED_DATA = (char *)calloc(7, sizeof(char))),
+		(csect->cur_block->cur_node->STORED_DATA = (char *)calloc(7, sizeof(char))),
 		"%06X",
-		plus_minus_shit_parade(doc)
+		plus_minus_shit_parade(csect)
 	);
 	if(DEBUG_PRINT)
-		printf("%lu:%s\t", doc->cur_block->cur_node->_size, doc->cur_block->cur_node->STORED_DATA);
+		printf("%lu:%s\t", csect->cur_block->cur_node->_size, csect->cur_block->cur_node->STORED_DATA);
 	
 }
 
-void assembler_directives_RESB(DOCUMENT *doc){
-	doc->cur_block->cur_node->FLAGS.RESERVED_SO_JMP_OBJ = true;
-	sscanf(CUR2(doc->cur_block->cur_node, 1), "%lu", &(doc->cur_block->cur_node->_size));
+void assembler_directives_RESB(CSECT *csect){
+	csect->cur_block->cur_node->FLAGS.RESERVED_SO_JMP_OBJ = true;
+	sscanf(CUR2(csect->cur_block->cur_node, 1), "%lu", &(csect->cur_block->cur_node->_size));
 	if(DEBUG_PRINT)
-		printf("%lu:%s\t", doc->cur_block->cur_node->_size, doc->cur_block->cur_node->STORED_DATA);
+		printf("%lu:%s\t", csect->cur_block->cur_node->_size, csect->cur_block->cur_node->STORED_DATA);
 }
 
-void assembler_directives_RESW(DOCUMENT *doc){
-	doc->cur_block->cur_node->FLAGS.RESERVED_SO_JMP_OBJ = true;
-	doc->cur_block->cur_node->_size = hex2int(CUR2(doc->cur_block->cur_node, 1)) * 3;
+void assembler_directives_RESW(CSECT *csect){
+	csect->cur_block->cur_node->FLAGS.RESERVED_SO_JMP_OBJ = true;
+	csect->cur_block->cur_node->_size = hex2int(CUR2(csect->cur_block->cur_node, 1)) * 3;
 	if(DEBUG_PRINT)
-		printf("%lu:%s\t", doc->cur_block->cur_node->_size, doc->cur_block->cur_node->STORED_DATA);
+		printf("%lu:%s\t", csect->cur_block->cur_node->_size, csect->cur_block->cur_node->STORED_DATA);
 }
 
-void assembler_directives_BASE(DOCUMENT *doc){
-	assembler_directives_BASE_TO_BE(doc, true);
+void assembler_directives_BASE(CSECT *csect){
+	assembler_directives_BASE_TO_BE(csect, true);
 }
 
-bool assembler_directives_BASE_TO_BE(DOCUMENT *doc, bool first){
+bool assembler_directives_BASE_TO_BE(CSECT *csect, bool first){
 	DATA *got;
 	// TODO : Refactoring Needed!
 	if(first){
-		got = assembler_get_value_from_symbol_or_not(doc, CUR2(doc->cur_block->cur_node, 1));
+		got = assembler_get_value_from_symbol_or_not(csect, CUR2(csect->cur_block->cur_node, 1));
 		if(got->where == FAILED){
-			doc->is_base = UseSymbol;
-			doc->to_base = doc->cur_block->cur_node;
+			csect->is_base = UseSymbol;
+			csect->to_base = csect->cur_block->cur_node;
 		}else{
-			doc->is_base = Set;
-			doc->base = got->wanted;
+			csect->is_base = Set;
+			csect->base = got->wanted;
 		}
 	}else{
-		if(doc->is_base == UseSymbol){
-			got = assembler_get_value_from_symbol_or_not(doc, CUR2(doc->to_base, 1));
+		if(csect->is_base == UseSymbol){
+			got = assembler_get_value_from_symbol_or_not(csect, CUR2(csect->to_base, 1));
 			if(got->where == FAILED){
-				printf("ERR! @ LINE NUM %lu\n", doc->to_base->LINE_NUM);
+				printf("ERR! @ LINE NUM %lu\n", csect->to_base->LINE_NUM);
 				return false;
 			}else{
-				doc->is_base = Set;
-				doc->base = got->wanted;
+				csect->is_base = Set;
+				csect->base = got->wanted;
 			}
 		}
 	}
 	if(DEBUG_PRINT)
-		printf("[[[%lu]]]\t", doc->base);
+		printf("[[[%lu]]]\t", csect->base);
 	return true;
 }
 
-void assembler_directives_EQU(DOCUMENT *doc){
-	doc->cur_block->cur_node->Symbol->is_equ = true;
-	if(strcasecmp(CUR2(doc->cur_block->cur_node, 1), "*") == 0){
-		doc->cur_block->cur_node->Symbol->equ = doc->cur_block->prev_locctr;
+void assembler_directives_EQU(CSECT *csect){
+	csect->cur_block->cur_node->Symbol->is_equ = true;
+	if(strcasecmp(CUR2(csect->cur_block->cur_node, 1), "*") == 0){
+		csect->cur_block->cur_node->Symbol->equ = csect->cur_block->prev_locctr;
 	}else{
 		// LOOP for Handling +-....
-		doc->cur_block->cur_node->Symbol->equ = plus_minus_shit_parade(doc);
+		csect->cur_block->cur_node->Symbol->equ = plus_minus_shit_parade(csect);
 	}
 }
 
-void assembler_directives_LTORG(DOCUMENT *doc){
-	literal_flush(doc);
+void assembler_directives_LTORG(CSECT *csect){
+	literal_flush(csect);
 }
 
-int plus_minus_shit_parade(DOCUMENT *doc){
-	NODE *now = doc->cur_block->cur_node;
+int plus_minus_shit_parade(CSECT *csect){
+	NODE *now = csect->cur_block->cur_node;
 	bool is_plus = true;
 	int a = 0, b = 0;
 	for(++now->cur_token; now->cur_token < now->token_cnt; now->cur_token++){
@@ -164,7 +164,7 @@ int plus_minus_shit_parade(DOCUMENT *doc){
 				a -= b;
 			is_plus = false;
 		}else{
-			DATA *got = assembler_get_value_from_symbol_or_not(doc, CUR(now));
+			DATA *got = assembler_get_value_from_symbol_or_not(csect, CUR(now));
 			switch(got->where){
 				case FAILED:
 					printf("ERR! CALC FAILED!! LINE NUM %lu\n", now->LINE_NUM);
@@ -184,11 +184,11 @@ int plus_minus_shit_parade(DOCUMENT *doc){
 	return a;
 }
 
-void assembler_directives_USE(DOCUMENT *doc){
+void assembler_directives_USE(CSECT *csect){
 	// DO NOTHING!
 }
 
-void assembler_directives_ORG(DOCUMENT *doc){
-	doc->cur_block->prev_locctr = plus_minus_shit_parade(doc);
+void assembler_directives_ORG(CSECT *csect){
+	csect->cur_block->prev_locctr = plus_minus_shit_parade(csect);
 	// DO NOTHING!
 }

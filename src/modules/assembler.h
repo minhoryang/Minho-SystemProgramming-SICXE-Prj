@@ -8,7 +8,7 @@
 
 	typedef struct _FLAG FLAG;
 	typedef struct _NODE NODE;
-	typedef struct _DOCUMENT DOCUMENT;
+	typedef struct _CSECT CSECT;
 	typedef struct _DATA DATA;
 	typedef struct _MODIFY MODIFY;
 	typedef struct _SYMBOL SYMBOL;
@@ -18,7 +18,7 @@
 	typedef struct _ASMDir ASMDir;
 	typedef enum { NotSet = 0, Set, UseSymbol } ThreeStates;
 	typedef enum { FAILED = -1, Integer, Symbol, Literal} From;
-	typedef void (*ASMDirFunc)(DOCUMENT *);
+	typedef void (*ASMDirFunc)(CSECT *);
 	#define CUR2(A, B) (A->token_pass[A->cur_token + B])
 	#define CUR(A) CUR2(A, 0)
 
@@ -69,7 +69,7 @@
 	};
 
 	struct _BLOCK{
-		DOCUMENT *_PARENT;
+		CSECT *_PARENT;
 		Elem elem;
 		char *NAME;
 		size_t ID;
@@ -82,7 +82,7 @@
 		size_t prev_locctr;
 	};
 
-	struct _DOCUMENT{
+	struct _CSECT{
 		// for Base.
 		size_t base;
 		ThreeStates is_base;
@@ -131,21 +131,18 @@
 		ASMDirFunc apply;
 	};
 
-	bool assembler_readline(char *, DOCUMENT *);
+	bool assembler_readline(char *, CSECT *);
 	bool IsNumberOnly(char * input);
-	bool assembler_pass1(DOCUMENT *, Hash *, List *);
-	bool assembler_pass2(DOCUMENT *doc);
+	bool assembler_pass1(CSECT *, Hash *, List *);
+	bool assembler_pass2(CSECT *csect);
 	size_t assembler_pass2_set_flag(NODE *now);
 	void assembler_pass2_object_print(NODE *now, int data);
 	void assembler_pass2_debug_print(NODE *now);
 	int assembler_get_value_from_register(char *this);
-	DATA *assembler_get_value_from_symbol_or_not(DOCUMENT *, char *);
-	bool assembler_make_lst(DOCUMENT *, char *);
-	void assembler_make_obj(DOCUMENT *, char *);
+	DATA *assembler_get_value_from_symbol_or_not(CSECT *, char *);
+	bool assembler_make_lst(CSECT *, char *);
+	void assembler_make_obj(CSECT *, char *);
 	void assembler_obj_range_print(FILE *fp, Elem *start, Elem *end, size_t cnt);
-
-	DOCUMENT *document_alloc();
-	void document_dealloc(DOCUMENT *);
 
 	NODE *node_alloc();
 	void node_dealloc(NODE *);
@@ -160,19 +157,19 @@
 	void assembler_directives_unload(List *);
 	ASMDir *assembler_directives_search(List *, char *);
 
-	void assembler_directives_START(DOCUMENT *);
-	void assembler_directives_END(DOCUMENT *);
-	void assembler_directives_BYTE(DOCUMENT *);
-	void assembler_directives_WORD(DOCUMENT *);
-	void assembler_directives_RESB(DOCUMENT *);
-	void assembler_directives_RESW(DOCUMENT *);
-	void assembler_directives_BASE(DOCUMENT *);
-	bool assembler_directives_BASE_TO_BE(DOCUMENT *, bool);
-	void assembler_directives_EQU(DOCUMENT *);
-	void assembler_directives_LTORG(DOCUMENT *);
-	void assembler_directives_USE(DOCUMENT *);
-	void assembler_directives_ORG(DOCUMENT *);
-	int plus_minus_shit_parade(DOCUMENT *);  // TODO MOVE!
+	void assembler_directives_START(CSECT *);
+	void assembler_directives_END(CSECT *);
+	void assembler_directives_BYTE(CSECT *);
+	void assembler_directives_WORD(CSECT *);
+	void assembler_directives_RESB(CSECT *);
+	void assembler_directives_RESW(CSECT *);
+	void assembler_directives_BASE(CSECT *);
+	bool assembler_directives_BASE_TO_BE(CSECT *, bool);
+	void assembler_directives_EQU(CSECT *);
+	void assembler_directives_LTORG(CSECT *);
+	void assembler_directives_USE(CSECT *);
+	void assembler_directives_ORG(CSECT *);
+	int plus_minus_shit_parade(CSECT *);  // TODO MOVE!
 #endif
 #ifndef src_modules_assembler_symbol
 	#define src_modules_assembler_symbol
@@ -189,9 +186,9 @@
 	#define src_modules_assembler_literal
 	LITERAL *literal_add(List *littab, char *query);
 	LITERAL *literal_search(List *littab, char *query);
-	LITERAL *literal_detect(DOCUMENT *doc);
-	void literal_flush(DOCUMENT *doc);
-	LITERAL *literal_dealloc(DOCUMENT *doc);
+	LITERAL *literal_detect(CSECT *csect);
+	void literal_flush(CSECT *csect);
+	LITERAL *literal_dealloc(CSECT *csect);
 #endif
 #ifndef src_modules_assembler_block
 	#define src_modules_assembler_block
@@ -199,4 +196,9 @@
 	char *block_detect(NODE *node);
 	BLOCK *block_search(List *blocks, char *query);
 	void block_dealloc(BLOCK *block);
+#endif
+#ifndef src_modules_assembler_csect
+	#define src_modules_assembler_csect
+	CSECT *csect_alloc();
+	void csect_dealloc(CSECT *);
 #endif

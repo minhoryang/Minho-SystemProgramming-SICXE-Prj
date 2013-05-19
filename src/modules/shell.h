@@ -23,7 +23,7 @@
 		// hash.h for OPTab, MNTab.
 		Hash *OP, *MN;
 		// ASSEMBLER
-		DOCUMENT *doc;
+		CSECT *csect;
 		List *asmdir;
 		//
 		bool was_clear;
