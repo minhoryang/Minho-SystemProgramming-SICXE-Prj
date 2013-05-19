@@ -1,4 +1,4 @@
-#define DEBUG_PRINT false  // TODO : DO NOT COMMIT WITH 'true'!!!!!!!!!!!!!
+#define DEBUG_PRINT true  // TODO : DO NOT COMMIT WITH 'true'!!!!!!!!!!!!!
 
 #ifndef src_modules_assembler
 	#define src_modules_assembler
@@ -12,6 +12,7 @@
 	typedef struct _DATA DATA;
 	typedef struct _MODIFY MODIFY;
 	typedef struct _SYMBOL SYMBOL;
+	typedef struct _BLOCK BLOCK;
 	typedef struct _LITERAL LITERAL;
 	typedef struct _LITERAL_USER LITUSER;
 	typedef struct _ASMDir ASMDir;
@@ -50,15 +51,11 @@
 		char *STORED_DATA,
 			 *OBJECTCODE;
 
-		DOCUMENT *_PARENT;  // TODO
+		BLOCK *_PARENT;
 		SYMBOL *Symbol;
 		LITERAL *Literal;
 		OPMNNode *OPCODE;
 		FLAG FLAGS;
-
-#ifdef DEPRECATED_SIC
-		SYMBOL *DISP;
-#endif
 
 	};
 
@@ -71,6 +68,20 @@
 		int equ;
 	};
 
+	struct _BLOCK{
+		DOCUMENT *_PARENT;
+		Elem elem;
+		char *NAME;
+		size_t ID;
+		size_t SIZE;
+		size_t BASE;
+
+		List *nodes;
+		NODE *cur_node;
+
+		size_t prev_locctr;
+	};
+
 	struct _DOCUMENT{
 		// for Base.
 		size_t base;
@@ -81,15 +92,15 @@
 			 *progname;
 		size_t start_addr, end_addr;
 
-		List *nodes,
+		List *blocks,
 			 *symtab,
 			 *datas,
 			 *modtab,
 			 *littab;
 
 		// for Current.
-		NODE *cur_node;
-		size_t prev_locctr;
+		BLOCK *cur_block;
+		size_t prev_base;
 	};
 
 	struct _DATA{
@@ -123,9 +134,6 @@
 	bool assembler_readline(char *, DOCUMENT *);
 	bool IsNumberOnly(char * input);
 	bool assembler_pass1(DOCUMENT *, Hash *, List *);
-#ifdef DEPRECATED_SIC
-		//bool assembler_pass1_got_opcode_check_disp(DOCUMENT *doc, NODE *now);
-#endif
 	bool assembler_pass2(DOCUMENT *doc);
 	size_t assembler_pass2_set_flag(NODE *now);
 	void assembler_pass2_object_print(NODE *now, int data);
@@ -138,6 +146,7 @@
 
 	DOCUMENT *document_alloc();
 	void document_dealloc(DOCUMENT *);
+
 	NODE *node_alloc();
 	void node_dealloc(NODE *);
 #endif
@@ -161,6 +170,7 @@
 	void assembler_directives_BASE_TO_BE(DOCUMENT *, bool);
 	void assembler_directives_EQU(DOCUMENT *);
 	void assembler_directives_LTORG(DOCUMENT *);
+	void assembler_directives_USE(DOCUMENT *);
 	int plus_minus_shit_parade(DOCUMENT *);  // TODO MOVE!
 #endif
 #ifndef src_modules_assembler_symbol
@@ -182,4 +192,10 @@
 	void literal_flush(DOCUMENT *doc);
 	LITERAL *literal_dealloc(DOCUMENT *doc);
 #endif
-
+#ifndef src_modules_assembler_block
+	#define src_modules_assembler_block
+	BLOCK *block_alloc(size_t ID, char *name);
+	char *block_detect(NODE *node);
+	BLOCK *block_search(List *blocks, char *query);
+	void block_dealloc(BLOCK *block);
+#endif

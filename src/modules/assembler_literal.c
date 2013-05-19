@@ -2,7 +2,7 @@ LITERAL *literal_add(List *littab, char *query){
 	LITERAL *result;
 	if((result = literal_search(littab, query)) == NULL){
 		result = (LITERAL *)calloc(1, sizeof(LITERAL));
-		result->name = query;
+		result->name = strdup(query);
 		result->done = false;
 		list_push_back(littab, &(result->elem));
 	}
@@ -23,7 +23,7 @@ LITERAL *literal_search(List *littab, char *query){
 }
 
 LITERAL *literal_detect(DOCUMENT *doc){
-	NODE *now = doc->cur_node;
+	NODE *now = doc->cur_block->cur_node;
 	bool is_found = false;
 	for(now->cur_token = 0; now->cur_token < now->token_cnt; now->cur_token++)
 		if(strcasecmp(CUR(now), "=") == 0){
@@ -45,16 +45,17 @@ void literal_flush(DOCUMENT *doc){
 			if(!this->done){
 				this->done = true;
 				new = node_alloc();
+				new->_PARENT = doc->cur_block;
 				this->where = new;
 				sprintf(new->token_orig, "\t=X'%s'", this->name);
 				new->STORED_DATA = strdup(this->name);  // TODO!
 				new->_size = strlen(this->name)/2;
-				{
-					doc->cur_node->LOCATION_CNT = doc->prev_locctr;
-					doc->prev_locctr = doc->cur_node->LOCATION_CNT + doc->cur_node->_size;
-				}
-				list_insert((doc->cur_node->elem.next), &(new->elem));
-				doc->cur_node = new;
+				/*{
+					doc->cur_block->cur_node->LOCATION_CNT = doc->cur_block->prev_locctr;
+					doc->cur_block->prev_locctr = doc->cur_block->cur_node->LOCATION_CNT + doc->cur_block->cur_node->_size;
+				}*/
+				list_insert((doc->cur_block->cur_node->elem.next), &(new->elem));
+				doc->cur_block->cur_node = new;
 			}
 	}
 }
