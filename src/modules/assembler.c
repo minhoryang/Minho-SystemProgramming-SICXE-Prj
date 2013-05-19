@@ -224,7 +224,7 @@ bool assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
 						if(!hasAsmdir && !hasOpcode){
 							IF_OPCODE_OR_ASMDIR_DO  // if (above)
 							else{
-								printf("4ERROR!!!! LINE %lu\n", now->LINE_NUM);
+								printf("ERROR!! NO ASMDIR&OPCODE LINE %lu\n", now->LINE_NUM);
 								size_t i = 0;
 								if(DEBUG_PRINT)
 									for(i=0;i<now->token_cnt;i++)
@@ -290,7 +290,7 @@ bool assembler_pass2(DOCUMENT *doc){
 										a = assembler_get_value_from_register(CUR(now));
 										break;
 									default:
-										printf("ERR! FORMAT2, no value?\n");
+										printf("ERR! FORMAT2, no value? LINE NUM %lu\n", now->LINE_NUM);
 										OMGflag = true;
 										break;
 								}
@@ -339,7 +339,7 @@ bool assembler_pass2(DOCUMENT *doc){
 													now->FLAGS._B_ = true;
 												}else F4_DISP_COND  // XXX : DISP @ FORMAT 4.
 												else{
-													printf("ERR! FORMAT3/4, FAILED TO CALC DISP!\n");
+													printf("ERR! FORMAT3/4, FAILED TO CALC DISP! LINE NUM %lu\n", now->LINE_NUM);
 													OMGflag = true;
 													break;
 													//assembler_pass2_debug_print(now);

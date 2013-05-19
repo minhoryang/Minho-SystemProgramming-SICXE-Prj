@@ -119,7 +119,7 @@ bool assembler_directives_BASE_TO_BE(DOCUMENT *doc, bool first){
 		if(doc->is_base == UseSymbol){
 			got = assembler_get_value_from_symbol_or_not(doc, CUR2(doc->to_base, 1));
 			if(got->where == FAILED){
-				printf("ERR!!!!!!!!!!!!!!!");
+				printf("ERR! @ LINE NUM %lu\n", doc->to_base->LINE_NUM);
 				return false;
 			}else{
 				doc->is_base = Set;
@@ -167,7 +167,7 @@ int plus_minus_shit_parade(DOCUMENT *doc){
 			DATA *got = assembler_get_value_from_symbol_or_not(doc, CUR(now));
 			switch(got->where){
 				case FAILED:
-					printf("ERR! CALC FAILED!!\n");
+					printf("ERR! CALC FAILED!! LINE NUM %lu\n", now->LINE_NUM);
 					break;
 				case Integer:
 				case Symbol:
