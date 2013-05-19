@@ -58,9 +58,13 @@ void symbol_view(List *symtab){
 		find = list_next(find)){
 			SYMBOL *now = list_entry(find, SYMBOL, elem);
 			printf("\t%s\t", now->symbol); 
-			if(now->link != NULL)
-				printf("%04X\n", (unsigned int)now->link->LOCATION_CNT); 
-			else
-				printf("----\n"); 
+			if(now->is_equ){
+				printf("%04X\n", (unsigned int)now->equ);
+			}else{
+				if(now->link != NULL)
+					printf("%04X\n", (unsigned int)now->link->LOCATION_CNT); 
+				else
+					printf("----\n");
+			}
 	}
 }

@@ -131,9 +131,56 @@ void assembler_directives_BASE_TO_BE(DOCUMENT *doc, bool first){
 }
 
 void assembler_directives_EQU(DOCUMENT *doc){
-	;
+	printf("\n<%s>\n", doc->cur_node->token_orig);
+	doc->cur_node->Symbol->is_equ = true;
+	if(strcasecmp(CUR2(doc->cur_node, 1), "*") == 0){
+		doc->cur_node->Symbol->equ = doc->prev_locctr;
+	}else{
+		// LOOP for Handling +-....
+		doc->cur_node->Symbol->equ = plus_minus_shit_parade(doc);
+	}
 }
 
 void assembler_directives_LTORG(DOCUMENT *doc){
 	literal_flush(doc);
+}
+
+int plus_minus_shit_parade(DOCUMENT *doc){
+	NODE *now = doc->cur_node;
+	bool is_plus = true;
+	int a = 0, b = 0;
+	for(++now->cur_token; now->cur_token < now->token_cnt; now->cur_token++){
+		printf("<%s>\t", CUR(now));
+		if(strcasecmp(CUR(now), "+") == 0){
+			if(is_plus)
+				a += b;
+			else
+				a -= b;
+			is_plus = true;
+		}else if(strcasecmp(CUR(now), "-") == 0){
+			if(is_plus)
+				a += b;
+			else
+				a -= b;
+			is_plus = false;
+		}else{
+			DATA *got = assembler_get_value_from_symbol_or_not(doc, CUR(now));
+			switch(got->where){
+				case FAILED:
+					printf("ERRRRRRRR!\n");  // TODO!
+					break;
+				case Integer:
+				case Symbol:
+				case Literal:
+					b = got->wanted;
+					break;
+			}
+			printf("b%d\t", b);
+		}
+	}
+	if(is_plus)
+		a += b;
+	else
+		a -= b;
+	return a;
 }

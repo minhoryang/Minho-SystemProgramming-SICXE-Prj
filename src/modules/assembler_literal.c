@@ -60,5 +60,5 @@ void literal_flush(DOCUMENT *doc){
 }
 
 LITERAL *literal_dealloc(DOCUMENT *doc){
-	;
+	return NULL;
 }

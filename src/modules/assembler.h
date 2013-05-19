@@ -66,6 +66,9 @@
 		Elem elem;
 		char *symbol;
 		NODE *link;
+		// for EQU.
+		bool is_equ;
+		int equ;
 	};
 
 	struct _DOCUMENT{
@@ -158,6 +161,7 @@
 	void assembler_directives_BASE_TO_BE(DOCUMENT *, bool);
 	void assembler_directives_EQU(DOCUMENT *);
 	void assembler_directives_LTORG(DOCUMENT *);
+	int plus_minus_shit_parade(DOCUMENT *);  // TODO MOVE!
 #endif
 #ifndef src_modules_assembler_symbol
 	#define src_modules_assembler_symbol

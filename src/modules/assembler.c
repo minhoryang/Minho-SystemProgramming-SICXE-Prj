@@ -443,8 +443,13 @@ DATA *assembler_get_value_from_symbol_or_not(DOCUMENT *doc, char *this){
 
 	SYMBOL *target = NULL;
 	if((target = symbol_search(doc->symtab, this)) != NULL){
-		new->wanted = target->link->LOCATION_CNT;
-		new->where = Symbol;
+		if(!target->is_equ){
+			new->wanted = target->link->LOCATION_CNT;
+			new->where = Symbol;
+		}else{
+			new->wanted = target->equ;
+			new->where = Integer;
+		}
 	}else if (IsNumberOnly(this)){
 		sscanf(this, "%lu", &new->wanted);
 		new->where = Integer;
