@@ -1,4 +1,4 @@
-	List *assembler_directives_load(){
+List *assembler_directives_load(){
 	List *target = (List *)calloc(1, sizeof(List));
 #define CNT 10
 	char wanted[CNT][7] = {"START", "END", "BYTE", "WORD", "RESB", "RESW", "BASE", "EQU", "LTORG", "USE"};
@@ -130,7 +130,6 @@ void assembler_directives_BASE_TO_BE(DOCUMENT *doc, bool first){
 }
 
 void assembler_directives_EQU(DOCUMENT *doc){
-	printf("\n<%s>\n", doc->cur_block->cur_node->token_orig);
 	doc->cur_block->cur_node->Symbol->is_equ = true;
 	if(strcasecmp(CUR2(doc->cur_block->cur_node, 1), "*") == 0){
 		doc->cur_block->cur_node->Symbol->equ = doc->cur_block->prev_locctr;
@@ -149,7 +148,6 @@ int plus_minus_shit_parade(DOCUMENT *doc){
 	bool is_plus = true;
 	int a = 0, b = 0;
 	for(++now->cur_token; now->cur_token < now->token_cnt; now->cur_token++){
-		printf("<%s>\t", CUR(now));
 		if(strcasecmp(CUR(now), "+") == 0){
 			if(is_plus)
 				a += b;
@@ -174,7 +172,6 @@ int plus_minus_shit_parade(DOCUMENT *doc){
 					b = got->wanted;
 					break;
 			}
-			printf("b%d\t", b);
 		}
 	}
 	if(is_plus)

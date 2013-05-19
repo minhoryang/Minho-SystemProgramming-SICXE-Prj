@@ -1,4 +1,4 @@
-#define DEBUG_PRINT true  // TODO : DO NOT COMMIT WITH 'true'!!!!!!!!!!!!!
+#define DEBUG_PRINT false  // TODO : DO NOT COMMIT WITH 'true'!!!!!!!!!!!!!
 
 #ifndef src_modules_assembler
 	#define src_modules_assembler
