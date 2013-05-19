@@ -471,7 +471,11 @@ bool assembler_make_lst(DOCUMENT *doc, char *filename){
 				fprintf(fout, "%5lu", now->LINE_NUM); 
 			fprintf(fout, "\t"); 
 			if(!now->FLAGS.COMMENTED_SO_JMP_LST){
-				fprintf(fout, "%04X", (unsigned int)(now->LOCATION_CNT)); 
+				if(now->Symbol != NULL && now->Symbol->is_equ){
+					fprintf(fout, "%04X", (unsigned int)(now->Symbol->equ));
+				}else{
+					fprintf(fout, "%04X", (unsigned int)(now->LOCATION_CNT));
+				}
 			}
 			fprintf(fout, "\t%s\t", now->token_orig); 
 			if(now->STORED_DATA != NULL)
