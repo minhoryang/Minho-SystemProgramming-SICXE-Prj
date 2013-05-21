@@ -199,6 +199,7 @@ int Shell_MainLoop(Environment *env){
 				MN_List(env->MN);
 				break;
 			case 19:  // "assemble"
+				/*
 				if(env->len_token == 2){
 					if(env->csect)
 						csect_dealloc(env->csect);
@@ -226,6 +227,7 @@ int Shell_MainLoop(Environment *env){
 				}else
 					Shell_Exception(env);
 				break;
+				*/
 			case 20:  // "type"
 				if(env->len_token == 2){
 					Directory_File_Type(env->tokens[1]);

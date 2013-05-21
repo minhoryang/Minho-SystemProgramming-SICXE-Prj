@@ -1,7 +1,7 @@
 List *assembler_directives_load(){
 	List *target = (List *)calloc(1, sizeof(List));
-#define CNT 11
-	char wanted[CNT][7] = {"START", "END", "BYTE", "WORD", "RESB", "RESW", "BASE", "EQU", "LTORG", "USE", "ORG"};
+#define CNT 14
+	char wanted[CNT][7] = {"START", "END", "BYTE", "WORD", "RESB", "RESW", "BASE", "EQU", "LTORG", "USE", "ORG", "CSECT", "EXTDEF", "EXTREF"};
 	ASMDirFunc wanted_func[CNT] = {
 		assembler_directives_START,
 		assembler_directives_END,
@@ -13,7 +13,10 @@ List *assembler_directives_load(){
 		assembler_directives_EQU,
 		assembler_directives_LTORG,
 		assembler_directives_USE,
-		assembler_directives_ORG};
+		assembler_directives_ORG,
+		assembler_directives_CSECT,
+		assembler_directives_EXTDEF,
+		assembler_directives_EXTREF};
 	size_t i;
 	ASMDir *new;
 
@@ -52,58 +55,69 @@ ASMDir *assembler_directives_search(List *target, char *query){
 	return NULL;
 }
 
-void assembler_directives_START(CSECT *csect){
+void assembler_directives_START(DOCUMENT *doc){
+	CSECT *csect = doc->cur_csect;
 	csect->start_addr = (csect->prev_base = hex2int(CUR2(csect->cur_block->cur_node, 1)));
 	if(DEBUG_PRINT)
 		printf("Set Base @ %lu\t", csect->cur_block->prev_locctr);
 	csect->progname = strdup(csect->cur_block->cur_node->token_pass[0]);
+
+	SHARED *new = (SHARED *)calloc(1, sizeof(SHARED));
+	new->symbol = strdup(csect->progname);
+	list_push_back(doc->shared, &(new->elem));
 }
 
-void assembler_directives_END(CSECT *csect){
+void assembler_directives_END(DOCUMENT *doc){
 	SYMBOL *wanted;
+	CSECT *csect = doc->cur_csect;
 	if((wanted = symbol_search(csect->symtab, CUR2(csect->cur_block->cur_node, 1))) != NULL){
 		csect->end_addr = wanted->link->LOCATION_CNT;
 	}
 	literal_flush(csect);
 }
 
-void assembler_directives_BYTE(CSECT *csect){
+void assembler_directives_BYTE(DOCUMENT *doc){
+	CSECT *csect = doc->cur_csect;
 	csect->cur_block->cur_node->_size = strlen((csect->cur_block->cur_node->STORED_DATA = strdup(CUR2(csect->cur_block->cur_node, 1)))) / 2;
 	if(DEBUG_PRINT)
 		printf("%lu:%s\t", csect->cur_block->cur_node->_size, csect->cur_block->cur_node->STORED_DATA);
 }
 
-void assembler_directives_WORD(CSECT *csect){
+void assembler_directives_WORD(DOCUMENT *doc){
+	CSECT *csect = doc->cur_csect;
 	csect->cur_block->cur_node->_size = 3;
 	sprintf(
 		(csect->cur_block->cur_node->STORED_DATA = (char *)calloc(7, sizeof(char))),
 		"%06X",
-		plus_minus_shit_parade(csect)
+		plus_minus_shit_parade(doc)
 	);
 	if(DEBUG_PRINT)
 		printf("%lu:%s\t", csect->cur_block->cur_node->_size, csect->cur_block->cur_node->STORED_DATA);
 	
 }
 
-void assembler_directives_RESB(CSECT *csect){
+void assembler_directives_RESB(DOCUMENT *doc){
+	CSECT *csect = doc->cur_csect;
 	csect->cur_block->cur_node->FLAGS.RESERVED_SO_JMP_OBJ = true;
 	sscanf(CUR2(csect->cur_block->cur_node, 1), "%lu", &(csect->cur_block->cur_node->_size));
 	if(DEBUG_PRINT)
 		printf("%lu:%s\t", csect->cur_block->cur_node->_size, csect->cur_block->cur_node->STORED_DATA);
 }
 
-void assembler_directives_RESW(CSECT *csect){
+void assembler_directives_RESW(DOCUMENT *doc){
+	CSECT *csect = doc->cur_csect;
 	csect->cur_block->cur_node->FLAGS.RESERVED_SO_JMP_OBJ = true;
 	csect->cur_block->cur_node->_size = hex2int(CUR2(csect->cur_block->cur_node, 1)) * 3;
 	if(DEBUG_PRINT)
 		printf("%lu:%s\t", csect->cur_block->cur_node->_size, csect->cur_block->cur_node->STORED_DATA);
 }
 
-void assembler_directives_BASE(CSECT *csect){
-	assembler_directives_BASE_TO_BE(csect, true);
+void assembler_directives_BASE(DOCUMENT *doc){
+	assembler_directives_BASE_TO_BE(doc, true);
 }
 
-bool assembler_directives_BASE_TO_BE(CSECT *csect, bool first){
+bool assembler_directives_BASE_TO_BE(DOCUMENT *doc, bool first){
+	CSECT *csect = doc->cur_csect;
 	DATA *got;
 	// TODO : Refactoring Needed!
 	if(first){
@@ -132,21 +146,24 @@ bool assembler_directives_BASE_TO_BE(CSECT *csect, bool first){
 	return true;
 }
 
-void assembler_directives_EQU(CSECT *csect){
+void assembler_directives_EQU(DOCUMENT *doc){
+	CSECT *csect = doc->cur_csect;
 	csect->cur_block->cur_node->Symbol->is_equ = true;
 	if(strcasecmp(CUR2(csect->cur_block->cur_node, 1), "*") == 0){
 		csect->cur_block->cur_node->Symbol->equ = csect->cur_block->prev_locctr;
 	}else{
 		// LOOP for Handling +-....
-		csect->cur_block->cur_node->Symbol->equ = plus_minus_shit_parade(csect);
+		csect->cur_block->cur_node->Symbol->equ = plus_minus_shit_parade(doc);
 	}
 }
 
-void assembler_directives_LTORG(CSECT *csect){
+void assembler_directives_LTORG(DOCUMENT *doc){
+	CSECT *csect = doc->cur_csect;
 	literal_flush(csect);
 }
 
-int plus_minus_shit_parade(CSECT *csect){
+int plus_minus_shit_parade(DOCUMENT *doc){
+	CSECT *csect = doc->cur_csect;
 	NODE *now = csect->cur_block->cur_node;
 	bool is_plus = true;
 	int a = 0, b = 0;
@@ -172,7 +189,9 @@ int plus_minus_shit_parade(CSECT *csect){
 				case Integer:
 				case Symbol:
 				case Literal:
+				case Shared:  // TODO
 					b = got->wanted;
+					break;
 					break;
 			}
 		}
@@ -184,11 +203,46 @@ int plus_minus_shit_parade(CSECT *csect){
 	return a;
 }
 
-void assembler_directives_USE(CSECT *csect){
+void assembler_directives_USE(DOCUMENT *doc){
 	// DO NOTHING!
 }
 
-void assembler_directives_ORG(CSECT *csect){
-	csect->cur_block->prev_locctr = plus_minus_shit_parade(csect);
+void assembler_directives_ORG(DOCUMENT *doc){
+	CSECT *csect = doc->cur_csect;
+	csect->cur_block->prev_locctr = plus_minus_shit_parade(doc);
 	// DO NOTHING!
 }
+
+void assembler_directives_CSECT(DOCUMENT *doc){
+	CSECT *csect = doc->cur_csect;
+	csect->progname = strdup(csect->cur_block->cur_node->token_pass[0]);
+	// DO NOTHING!
+}
+
+void assembler_directives_EXTDEF(DOCUMENT *doc){
+	NODE *now = doc->cur_csect->cur_block->cur_node;
+	for(++now->cur_token; now->cur_token < now->token_cnt; now->cur_token++){
+		{
+			DEFINE *new = (DEFINE *)calloc(1, sizeof(DEFINE));
+			new->symbol = strdup(CUR(now));
+			list_push_back(doc->cur_csect->define, &(new->elem));
+		}
+		{
+			SHARED *new = (SHARED *)calloc(1, sizeof(SHARED));
+			new->symbol = strdup(CUR(now));
+			list_push_back(doc->shared, &(new->elem));
+		}
+	}
+	// DO NOTHING!
+}
+
+void assembler_directives_EXTREF(DOCUMENT *doc){
+	NODE *now = doc->cur_csect->cur_block->cur_node;
+	for(++now->cur_token; now->cur_token < now->token_cnt; now->cur_token++){
+		DEFINE *new = (DEFINE *)calloc(1, sizeof(DEFINE));
+		new->symbol = strdup(CUR(now));
+		list_push_back(doc->cur_csect->reference, &(new->elem));
+	}
+	// DO NOTHING!
+}
+

@@ -11,7 +11,10 @@ CSECT *csect_alloc(){
 	list_init(new->littab);
 	new->blocks = (List *)calloc(1, sizeof(List));
 	list_init(new->blocks);
-	new->filename = (char *)calloc(Tokenizer_Max_Length, sizeof(char));
+	new->define = (List *)calloc(1, sizeof(List));
+	list_init(new->define);
+	new->reference = (List *)calloc(1, sizeof(List));
+	list_init(new->reference);
 	return new;
 }
 
@@ -69,7 +72,16 @@ void csect_dealloc(CSECT *csect){
 	}
 	free(csect->blocks);
 
-	free(csect->filename);
+	for(find = list_begin(csect->define);
+		find != list_end(csect->define);
+		/* Do Nothing */){
+			DEFINE *s = list_entry(find, DEFINE, elem);
+			find = list_next(find);
+			free(s);
+	}
+	free(csect->define);
 
-	free(csect);  // Dealloc Document.
+
+	// TODO REFERENCE
+	free(csect);  // Dealloc Csect.
 }

@@ -1,4 +1,4 @@
-#define DEBUG_PRINT false  // TODO : DO NOT COMMIT WITH 'true'!!!!!!!!!!!!!
+#define DEBUG_PRINT true  // TODO : DO NOT COMMIT WITH 'true'!!!!!!!!!!!!!
 
 #ifndef src_modules_assembler
 	#define src_modules_assembler
@@ -6,19 +6,22 @@
 	#include "core/list.h"
 	#include "modules/optab.h"
 
-	typedef struct _FLAG FLAG;
 	typedef struct _NODE NODE;
+	typedef struct _BLOCK BLOCK;
 	typedef struct _CSECT CSECT;
+	typedef struct _DOCUMENT DOCUMENT;
+
+	typedef struct _FLAG FLAG;
 	typedef struct _DATA DATA;
 	typedef struct _MODIFY MODIFY;
+	typedef struct _DEFINE DEFINE;
+	typedef struct _SHARED SHARED;
 	typedef struct _SYMBOL SYMBOL;
-	typedef struct _BLOCK BLOCK;
 	typedef struct _LITERAL LITERAL;
-	typedef struct _LITERAL_USER LITUSER;
 	typedef struct _ASMDir ASMDir;
 	typedef enum { NotSet = 0, Set, UseSymbol } ThreeStates;
-	typedef enum { FAILED = -1, Integer, Symbol, Literal} From;
-	typedef void (*ASMDirFunc)(CSECT *);
+	typedef enum { FAILED = -1, Integer, Symbol, Literal, Shared} From;
+	typedef void (*ASMDirFunc)(DOCUMENT *);
 	#define CUR2(A, B) (A->token_pass[A->cur_token + B])
 	#define CUR(A) CUR2(A, 0)
 
@@ -88,8 +91,7 @@
 		ThreeStates is_base;
 		NODE *to_base;
 
-		char *filename,
-			 *progname;
+		char *progname;
 		size_t start_addr, end_addr;
 
 		List *blocks,
@@ -101,6 +103,27 @@
 		// for Current.
 		BLOCK *cur_block;
 		size_t prev_base;
+
+		DOCUMENT *_PARENT;
+		Elem elem;
+		List *define, *reference;
+	};
+
+	struct _DOCUMENT{
+		CSECT *cur_csect;
+		List *csects;
+		char *filename;
+		List *shared;
+	};
+
+	struct _DEFINE{
+		Elem elem;
+		char *symbol;
+	};
+
+	struct _SHARED{
+		Elem elem;
+		char *symbol;
 	};
 
 	struct _DATA{
@@ -111,6 +134,7 @@
 
 	struct _MODIFY_DATA{
 		bool is_plus;
+		char *this;
 	};
 	struct _MODIFY{
 		Elem elem;
@@ -131,17 +155,17 @@
 		ASMDirFunc apply;
 	};
 
-	bool assembler_readline(char *, CSECT *);
+	bool assembler_readline(char *, DOCUMENT *);
 	bool IsNumberOnly(char * input);
-	bool assembler_pass1(CSECT *, Hash *, List *);
-	bool assembler_pass2(CSECT *csect);
+	bool assembler_pass1(DOCUMENT *, Hash *, List *);
+	bool assembler_pass2(DOCUMENT *);
 	size_t assembler_pass2_set_flag(NODE *now);
 	void assembler_pass2_object_print(NODE *now, int data);
 	void assembler_pass2_debug_print(NODE *now);
 	int assembler_get_value_from_register(char *this);
 	DATA *assembler_get_value_from_symbol_or_not(CSECT *, char *);
-	bool assembler_make_lst(CSECT *, char *);
-	void assembler_make_obj(CSECT *, char *);
+	bool assembler_make_lst(DOCUMENT *, char *);
+	void assembler_make_obj(DOCUMENT *, char *);
 	void assembler_obj_range_print(FILE *fp, Elem *start, Elem *end, size_t cnt);
 
 	NODE *node_alloc();
@@ -157,19 +181,22 @@
 	void assembler_directives_unload(List *);
 	ASMDir *assembler_directives_search(List *, char *);
 
-	void assembler_directives_START(CSECT *);
-	void assembler_directives_END(CSECT *);
-	void assembler_directives_BYTE(CSECT *);
-	void assembler_directives_WORD(CSECT *);
-	void assembler_directives_RESB(CSECT *);
-	void assembler_directives_RESW(CSECT *);
-	void assembler_directives_BASE(CSECT *);
-	bool assembler_directives_BASE_TO_BE(CSECT *, bool);
-	void assembler_directives_EQU(CSECT *);
-	void assembler_directives_LTORG(CSECT *);
-	void assembler_directives_USE(CSECT *);
-	void assembler_directives_ORG(CSECT *);
-	int plus_minus_shit_parade(CSECT *);  // TODO MOVE!
+	void assembler_directives_START(DOCUMENT *);
+	void assembler_directives_END(DOCUMENT *);
+	void assembler_directives_BYTE(DOCUMENT *);
+	void assembler_directives_WORD(DOCUMENT *);
+	void assembler_directives_RESB(DOCUMENT *);
+	void assembler_directives_RESW(DOCUMENT *);
+	void assembler_directives_BASE(DOCUMENT *);
+	bool assembler_directives_BASE_TO_BE(DOCUMENT *, bool);
+	void assembler_directives_EQU(DOCUMENT *);
+	void assembler_directives_LTORG(DOCUMENT *);
+	void assembler_directives_USE(DOCUMENT *);
+	void assembler_directives_ORG(DOCUMENT *);
+	void assembler_directives_CSECT(DOCUMENT *);
+	void assembler_directives_EXTDEF(DOCUMENT *);
+	void assembler_directives_EXTREF(DOCUMENT *);
+	int plus_minus_shit_parade(DOCUMENT *);  // TODO MOVE!
 #endif
 #ifndef src_modules_assembler_symbol
 	#define src_modules_assembler_symbol
@@ -201,4 +228,11 @@
 	#define src_modules_assembler_csect
 	CSECT *csect_alloc();
 	void csect_dealloc(CSECT *);
+#endif
+#ifndef src_modules_assembler_document
+	#define src_modules_assembler_document
+	DOCUMENT *document_alloc();
+	void document_dealloc(DOCUMENT *doc);
+	char *document_csect_detect(NODE *now);
+	SHARED *shared_search(List *shared, char *query);
 #endif
