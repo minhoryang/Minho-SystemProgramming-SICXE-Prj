@@ -70,15 +70,15 @@ Environment *Shell_AllocateEnvironment(){
 		OPMN_Load(env->OP, env->MN, NULL);
 	}
 	{
-		env->doc = NULL;
+		env->csect = NULL;
 		env->asmdir = assembler_directives_load();
 	}
 	return env;
 }
 
 void Shell_DeAllocateEnvironment(Environment *env){
-	if(env->doc)
-		document_dealloc(env->doc);
+	if(env->csect)
+		csect_dealloc(env->csect);
 	assembler_directives_unload(env->asmdir);
 	hash_destroy(env->OP, both_hash_destructor);
 	hash_destroy(env->MN, NULL);
@@ -200,17 +200,17 @@ int Shell_MainLoop(Environment *env){
 				break;
 			case 19:  // "assemble"
 				if(env->len_token == 2){
-					if(env->doc)
-						document_dealloc(env->doc);
-					if(!assembler_readline(env->tokens[1], (env->doc = document_alloc()))){
-						if(!assembler_pass1(env->doc, env->OP, env->asmdir)){
-							if(!assembler_pass2(env->doc)){
-								char *filename1 = strdup(env->doc->filename),
-									 *filename2 = strdup(env->doc->filename);
+					if(env->csect)
+						csect_dealloc(env->csect);
+					if(!assembler_readline(env->tokens[1], (env->csect = csect_alloc()))){
+						if(!assembler_pass1(env->csect, env->OP, env->asmdir)){
+							if(!assembler_pass2(env->csect)){
+								char *filename1 = strdup(env->csect->filename),
+									 *filename2 = strdup(env->csect->filename);
 								strcat(filename1, ".lst");
 								strcat(filename2, ".obj");
-								if(!assembler_make_lst(env->doc, filename1)){
-									assembler_make_obj(env->doc, filename2);
+								if(!assembler_make_lst(env->csect, filename1)){
+									assembler_make_obj(env->csect, filename2);
 									printf("\toutput file : [%s], [%s]\n", filename1, filename2);
 								}else{
 									remove(filename1);
@@ -233,9 +233,9 @@ int Shell_MainLoop(Environment *env){
 					Shell_Exception(env);
 				break;
 			case 21:  // "symbol"
-				if(env->doc){
+				if(env->csect){
 					if(env->len_token == 1){
-						symbol_view(env->doc->symtab);
+						symbol_view(env->csect->symtab);
 					}else
 						Shell_Exception(env);
 				}else

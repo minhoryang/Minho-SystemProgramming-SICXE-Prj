@@ -19,22 +19,22 @@
 			strcat(filename1, ".lst");
 			strcat(filename2, ".obj");
 
-			DOCUMENT *doc;
+			CSECT *csect;
 
 			Hash *OP = OP_Alloc();  // OPCode Load.
 			OPMN_Load(OP, NULL, NULL);
 
 			List *directives = assembler_directives_load();
 		
-			assembler_readline(filename, (doc = document_alloc()));
-			assembler_pass1(doc, OP, directives);
-			assembler_pass2(doc);
-			assembler_make_lst(doc, filename1);
-			assembler_make_obj(doc, filename2);
+			assembler_readline(filename, (csect = csect_alloc()));
+			assembler_pass1(csect, OP, directives);
+			assembler_pass2(csect);
+			assembler_make_lst(csect, filename1);
+			assembler_make_obj(csect, filename2);
 
 			hash_destroy(OP, both_hash_destructor);  // OPCode Unload.
 			assembler_directives_unload(directives);
-			document_dealloc(doc);
+			csect_dealloc(csect);
 		}else{
 			Hash *OP = OP_Alloc();  // OPCode Load.
 			Hash *MN = MN_Alloc();
@@ -47,8 +47,8 @@
 	}
 #endif
 
-bool assembler_readline(char *filename, DOCUMENT *doc){
-	// XXX : Read Line -> Assign Node -> set$lineNum$ -> Add Node @ DOCUMENT.
+bool assembler_readline(char *filename, CSECT *csect){
+	// XXX : Read Line -> Assign Node -> set$lineNum$ -> Add Node @ CSECT.
 	FILE *fin = fopen(filename, "r");
 	size_t lineNum = 0, jmp = 5, blockNum = 0;
 	enum ThreeStates {reset=-1, no, yes} lineNumIn = reset;
@@ -56,9 +56,9 @@ bool assembler_readline(char *filename, DOCUMENT *doc){
 	if(fin == NULL) return true;
 
 	// Add (default) Block to Document!
-	doc->cur_block = block_alloc(blockNum++, "(default)");
-	list_push_back(doc->blocks, &(doc->cur_block->elem));
-	doc->cur_block->_PARENT = doc;
+	csect->cur_block = block_alloc(blockNum++, "(default)");
+	list_push_back(csect->blocks, &(csect->cur_block->elem));
+	csect->cur_block->_PARENT = csect;
 	NODE *nd = NULL;
 
 	while(
@@ -81,27 +81,27 @@ bool assembler_readline(char *filename, DOCUMENT *doc){
 					char *newuse;
 					if((newuse = block_detect(nd)) != NULL){
 						BLOCK *found;
-						if((found = block_search(doc->blocks, newuse)) != NULL){
-							doc->cur_block = found;
+						if((found = block_search(csect->blocks, newuse)) != NULL){
+							csect->cur_block = found;
 								// if has -> switch
 						}else{
-							doc->cur_block = block_alloc(blockNum++, newuse);
-							list_push_back(doc->blocks, &(doc->cur_block->elem));
-							doc->cur_block->_PARENT = doc;
+							csect->cur_block = block_alloc(blockNum++, newuse);
+							list_push_back(csect->blocks, &(csect->cur_block->elem));
+							csect->cur_block->_PARENT = csect;
 								// if not -> make & switch.
 						}
 					}
 				}
 				{  // Add (nd) Node to (?) Block
-					list_push_back(doc->cur_block->nodes, &(nd->elem));
-					doc->cur_block->cur_node = nd;
-					nd->_PARENT = doc->cur_block;
+					list_push_back(csect->cur_block->nodes, &(nd->elem));
+					csect->cur_block->cur_node = nd;
+					nd->_PARENT = csect->cur_block;
 				}
 				{  // XXX : LineNumber Generator.
 					char *swap;
 					if(lineNumIn == reset){  // ONE-TIME-ONLY. Try to find LineNum at inputs.
-						if((doc->cur_block->cur_node)->token_cnt > 0){
-							if(IsNumberOnly((doc->cur_block->cur_node)->token_pass[0]))
+						if((csect->cur_block->cur_node)->token_cnt > 0){
+							if(IsNumberOnly((csect->cur_block->cur_node)->token_pass[0]))
 								lineNumIn = yes;
 							else
 								lineNumIn = no;
@@ -114,27 +114,27 @@ bool assembler_readline(char *filename, DOCUMENT *doc){
 							// HANDLED ONE-TIME-ONLY.
 							break;
 						case yes:
-							(doc->cur_block->cur_node)->LINE_NUM = (unsigned int)atoi((doc->cur_block->cur_node)->token_pass[0]);
-							if((doc->cur_block->cur_node)->token_cnt)
+							(csect->cur_block->cur_node)->LINE_NUM = (unsigned int)atoi((csect->cur_block->cur_node)->token_pass[0]);
+							if((csect->cur_block->cur_node)->token_cnt)
 							{  // IGNORE LINENUMBER FOR ASSEMBLER_PASS.
 								{  // Shift << 'LineNum'.
-									swap = (doc->cur_block->cur_node)->token_pass[0];  // 0
+									swap = (csect->cur_block->cur_node)->token_pass[0];  // 0
 									for(jmp = 1; jmp < Tokenizer_Max_Length; jmp++)  // 1~81=>0~80
-										(doc->cur_block->cur_node)->token_pass[jmp-1] = (doc->cur_block->cur_node)->token_pass[jmp];
-									(doc->cur_block->cur_node)->token_pass[Tokenizer_Max_Length-1] = swap;  // 81=>0.
+										(csect->cur_block->cur_node)->token_pass[jmp-1] = (csect->cur_block->cur_node)->token_pass[jmp];
+									(csect->cur_block->cur_node)->token_pass[Tokenizer_Max_Length-1] = swap;  // 81=>0.
 								}
-								(doc->cur_block->cur_node)->token_cnt--;  // Set 'ignore' as decreasing token_cnt.
+								(csect->cur_block->cur_node)->token_cnt--;  // Set 'ignore' as decreasing token_cnt.
 							}
 							break;
 						case no:
-							lineNum = ((doc->cur_block->cur_node)->LINE_NUM = lineNum + jmp);
+							lineNum = ((csect->cur_block->cur_node)->LINE_NUM = lineNum + jmp);
 							break;
 					}
 		}
 	}
-	doc->cur_block->cur_node = NULL;
-	doc->cur_block = NULL;
-	strncpy(doc->filename, filename, strlen(filename) - 4);  // TODO FILENAME
+	csect->cur_block->cur_node = NULL;
+	csect->cur_block = NULL;
+	strncpy(csect->filename, filename, strlen(filename) - 4);  // TODO FILENAME
 	fclose(fin);
 	return false;
 }
@@ -150,17 +150,17 @@ bool IsNumberOnly(char * input){  // TODO PULL THIS OUT!
 	return is_lineNum;
 }
 
-bool assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
+bool assembler_pass1(CSECT *csect, Hash *opcode, List *asmdirs){
 	// XXX : Pass 1.
 	Elem *find_block;
 	bool OMGflag = false;
 
-	for(find_block = list_begin(doc->blocks);
-		find_block != list_end(doc->blocks);
+	for(find_block = list_begin(csect->blocks);
+		find_block != list_end(csect->blocks);
 		find_block = list_next(find_block)){
 
-		BLOCK *blk = (doc->cur_block = list_entry(find_block, BLOCK, elem));
-		blk->BASE = (blk->prev_locctr = doc->prev_base);
+		BLOCK *blk = (csect->cur_block = list_entry(find_block, BLOCK, elem));
+		blk->BASE = (blk->prev_locctr = csect->prev_base);
 		Elem *find_node;
 
 		for(find_node = list_begin(blk->nodes);
@@ -170,7 +170,7 @@ bool assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
 				bool hasSymbol = false, hasAsmdir = false, hasOpcode = false;
 				NODE *now = (blk->cur_node = list_entry(find_node, NODE, elem));
 	
-				now->Literal = literal_detect(doc); // TODO!
+				now->Literal = literal_detect(csect);
 	
 				for(now->cur_token = 0; now->cur_token < now->token_cnt; now->cur_token++){
 					OPMNNode *found_opcode;
@@ -195,7 +195,7 @@ bool assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
 								if(DEBUG_PRINT)	\
 									printf("ASMDIR! %s\t", CUR(now));	\
 								hasAsmdir = true;	\
-								found_asmdir->apply(doc);	\
+								found_asmdir->apply(csect);	\
 								break;	\
 							}	\
 							else if(strcasecmp("+", CUR(now)) == 0){	\
@@ -210,7 +210,7 @@ bool assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
 								if(DEBUG_PRINT)
 									printf("SYMBOL! %s\t", CUR(now));
 								hasSymbol = true;
-								if((new_symbol = symbol_add(doc->symtab, CUR(now), now)) != NULL){
+								if((new_symbol = symbol_add(csect->symtab, CUR(now), now)) != NULL){
 									now->Symbol = new_symbol;
 									new_symbol = NULL;
 								}else{
@@ -224,7 +224,7 @@ bool assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
 						if(!hasAsmdir && !hasOpcode){
 							IF_OPCODE_OR_ASMDIR_DO  // if (above)
 							else{
-								printf("4ERROR!!!! LINE %lu\n", now->LINE_NUM);
+								printf("ERROR!! NO ASMDIR&OPCODE LINE %lu\n", now->LINE_NUM);
 								size_t i = 0;
 								if(DEBUG_PRINT)
 									for(i=0;i<now->token_cnt;i++)
@@ -243,26 +243,29 @@ bool assembler_pass1(DOCUMENT *doc, Hash *opcode, List *asmdirs){
 				if(OMGflag)
 					break;
 		}
-		doc->prev_base = blk->prev_locctr;
+		csect->prev_base = blk->prev_locctr;
 		blk->SIZE = blk->prev_locctr - blk->BASE;
 		blk->cur_node = NULL;
+		if(OMGflag)
+			break;
 	}
-	doc->cur_block = NULL;
+	csect->cur_block = NULL;
 	return OMGflag;
 }
 
-bool assembler_pass2(DOCUMENT *doc){
+bool assembler_pass2(CSECT *csect){
 	// XXX : Pass 2.
 	Elem *find_block;
 	bool OMGflag = false;
 
-	assembler_directives_BASE_TO_BE(doc, false);  // TODO ERROR HANDLING!
+	if(!assembler_directives_BASE_TO_BE(csect, false))
+		printf("ERR! couldn't calc BASE\n");
 
-	for(find_block = list_begin(doc->blocks);
-		find_block != list_end(doc->blocks);
+	for(find_block = list_begin(csect->blocks);
+		find_block != list_end(csect->blocks);
 		find_block = list_next(find_block)){
 
-		BLOCK *blk = (doc->cur_block = list_entry(find_block, BLOCK, elem));
+		BLOCK *blk = (csect->cur_block = list_entry(find_block, BLOCK, elem));
 		Elem *find_node;
 
 		for(find_node = list_begin(blk->nodes);
@@ -287,7 +290,8 @@ bool assembler_pass2(DOCUMENT *doc){
 										a = assembler_get_value_from_register(CUR(now));
 										break;
 									default:
-										// TODO : ERROR!!!!
+										printf("ERR! FORMAT2, no value? LINE NUM %lu\n", now->LINE_NUM);
+										OMGflag = true;
 										break;
 								}
 								sprintf(now->OBJECTCODE, "%02X%01X%01X", now->OPCODE->opcode, a, b);
@@ -304,7 +308,7 @@ bool assembler_pass2(DOCUMENT *doc){
 									MODIFY *md = (MODIFY *)calloc(1, sizeof(MODIFY)); \
 									md->target = now; \
 									md->more = NULL; \
-									list_push_back(doc->modtab, &(md->elem)); \
+									list_push_back(csect->modtab, &(md->elem)); \
 								} \
 							}
 						case 3:
@@ -313,7 +317,7 @@ bool assembler_pass2(DOCUMENT *doc){
 								if(now->Literal == NULL){
 									size_t need_to_find = assembler_pass2_set_flag(now);
 									if(need_to_find != SIZE_MAX)
-										value = assembler_get_value_from_symbol_or_not(doc, now->token_pass[need_to_find]);
+										value = assembler_get_value_from_symbol_or_not(csect, now->token_pass[need_to_find]);
 								}else{
 										assembler_pass2_set_flag(now);
 									value = (DATA *)calloc(1, sizeof(DATA));
@@ -330,13 +334,15 @@ bool assembler_pass2(DOCUMENT *doc){
 												if((-2048 <= disp - PC) && (disp - PC <= 2047)){
 													disp -= PC;
 													now->FLAGS._P_ = true;
-												}else if((doc->is_base == Set) && (0 <= disp - doc->base) && (disp - doc->base <= 4095)){
-													disp -= doc->base;
+												}else if((csect->is_base == Set) && (0 <= disp - csect->base) && (disp - csect->base <= 4095)){
+													disp -= csect->base;
 													now->FLAGS._B_ = true;
 												}else F4_DISP_COND  // XXX : DISP @ FORMAT 4.
 												else{
-													// TODO ERROR!
-													assembler_pass2_debug_print(now);
+													printf("ERR! FORMAT3/4, FAILED TO CALC DISP! LINE NUM %lu\n", now->LINE_NUM);
+													OMGflag = true;
+													break;
+													//assembler_pass2_debug_print(now);
 												}
 											}
 										}
@@ -350,10 +356,14 @@ bool assembler_pass2(DOCUMENT *doc){
 							break;
 					}
 				}
+				if(OMGflag)
+					break;
 		}
 		blk->cur_node = NULL;
+		if(OMGflag)
+			break;
 	}
-	doc->cur_block = NULL;
+	csect->cur_block = NULL;
 	return OMGflag;
 }
 
@@ -432,12 +442,12 @@ int assembler_get_value_from_register(char *this){
 	return -1;
 }
 
-DATA *assembler_get_value_from_symbol_or_not(DOCUMENT *doc, char *this){
+DATA *assembler_get_value_from_symbol_or_not(CSECT *csect, char *this){
 	DATA *new = (DATA *)calloc(1, sizeof(DATA));
-	list_push_back(doc->datas, &(new->elem));
+	list_push_back(csect->datas, &(new->elem));
 
 	SYMBOL *target = NULL;
-	if((target = symbol_search(doc->symtab, this)) != NULL){
+	if((target = symbol_search(csect->symtab, this)) != NULL){
 		if(!target->is_equ){
 			new->wanted = target->link->LOCATION_CNT;
 			new->where = Symbol;
@@ -454,15 +464,15 @@ DATA *assembler_get_value_from_symbol_or_not(DOCUMENT *doc, char *this){
 	return new;
 }
 
-bool assembler_make_lst(DOCUMENT *doc, char *filename){
+bool assembler_make_lst(CSECT *csect, char *filename){
 	Elem *find_block;
 	FILE *fout = fopen(filename, "w");
 
-	for(find_block = list_begin(doc->blocks);
-		find_block != list_end(doc->blocks);
+	for(find_block = list_begin(csect->blocks);
+		find_block != list_end(csect->blocks);
 		find_block = list_next(find_block)){
 
-		BLOCK *blk = (doc->cur_block = list_entry(find_block, BLOCK, elem));
+		BLOCK *blk = (csect->cur_block = list_entry(find_block, BLOCK, elem));
 		Elem *find_node;
 
 		for(find_node = list_begin(blk->nodes);
@@ -488,25 +498,25 @@ bool assembler_make_lst(DOCUMENT *doc, char *filename){
 		}
 		blk->cur_node = NULL;
 	}
-	doc->cur_block = NULL;
+	csect->cur_block = NULL;
 	fclose(fout);
 	return false;
 }
 
-void assembler_make_obj(DOCUMENT *doc, char *filename){
+void assembler_make_obj(CSECT *csect, char *filename){
 	FILE *fout = fopen(filename, "w");
 	size_t cnt = 0, max_cnt = 60;
 	Elem *line_from = NULL, *line_end = NULL;
 	bool is_storing = false;
 
 	Elem *find_block;
-	fprintf(fout, "H%-6s%06X%06X\n", doc->progname, (unsigned int)doc->start_addr, (unsigned int)(doc->prev_base - doc->start_addr));
+	fprintf(fout, "H%-6s%06X%06X\n", csect->progname, (unsigned int)csect->start_addr, (unsigned int)(csect->prev_base - csect->start_addr));
 
-	for(find_block = list_begin(doc->blocks);
-		find_block != list_end(doc->blocks);
+	for(find_block = list_begin(csect->blocks);
+		find_block != list_end(csect->blocks);
 		find_block = list_next(find_block)){
 
-		BLOCK *blk = (doc->cur_block = list_entry(find_block, BLOCK, elem));
+		BLOCK *blk = (csect->cur_block = list_entry(find_block, BLOCK, elem));
 		Elem *find_node;
 
 		for(find_node = list_begin(blk->nodes);
@@ -545,11 +555,11 @@ void assembler_make_obj(DOCUMENT *doc, char *filename){
 		}
 		blk->cur_node = NULL;
 	}
-	doc->cur_block = NULL;
+	csect->cur_block = NULL;
 	
 	Elem *find;
-	for(find = list_begin(doc->modtab);
-		find != list_end(doc->modtab);
+	for(find = list_begin(csect->modtab);
+		find != list_end(csect->modtab);
 		find = list_next(find)){
 			MODIFY *now = list_entry(find, MODIFY, elem);
 			char buff[81] = {0,};
@@ -562,7 +572,7 @@ void assembler_make_obj(DOCUMENT *doc, char *filename){
 			}
 	}
 
-	fprintf(fout, "E%06X\n", (unsigned int)doc->end_addr);
+	fprintf(fout, "E%06X\n", (unsigned int)csect->end_addr);
 
 	fclose(fout);
 }
@@ -581,81 +591,6 @@ void assembler_obj_range_print(FILE *fp, Elem *start, Elem *end, size_t cnt){
 		}
 		fprintf(fp, "\n");
 	}
-}
-
-DOCUMENT *document_alloc(){
-	DOCUMENT *new = (DOCUMENT *)calloc(1, sizeof(DOCUMENT));
-	new->symtab = (List *)calloc(1, sizeof(List));
-	list_init(new->symtab);
-	new->datas = (List *)calloc(1, sizeof(List));
-	list_init(new->datas);
-	new->modtab = (List *)calloc(1, sizeof(List));
-	list_init(new->modtab);
-	new->littab = (List *)calloc(1, sizeof(List));
-	list_init(new->littab);
-	new->blocks = (List *)calloc(1, sizeof(List));
-	list_init(new->blocks);
-	new->filename = (char *)calloc(Tokenizer_Max_Length, sizeof(char));
-	return new;
-}
-
-void document_dealloc(DOCUMENT *doc){
-	struct list_elem *find;
-
-	for(find = list_begin(doc->symtab);
-		find != list_end(doc->symtab);
-		/* Do Nothing */){
-			SYMBOL *s = list_entry(find, SYMBOL, elem);
-			find = list_next(find);
-			if(s->symbol)
-				free(s->symbol);
-			free(s);
-	}
-	free(doc->symtab);
-
-	for(find = list_begin(doc->datas);
-		find != list_end(doc->datas);
-		/* Do Nothing */){
-			DATA *s = list_entry(find, DATA, elem);
-			find = list_next(find);
-			free(s);
-	}
-	free(doc->datas);
-
-	for(find = list_begin(doc->modtab);
-		find != list_end(doc->modtab);
-		/* Do Nothing */){
-			MODIFY *s = list_entry(find, MODIFY, elem);
-			find = list_next(find);
-			if(s->more)
-				free(s->more);
-			free(s);
-	}
-	free(doc->modtab);
-
-	for(find = list_begin(doc->littab);
-		find != list_end(doc->littab);
-		/* Do Nothing */){
-			LITERAL *s = list_entry(find, LITERAL, elem);
-			find = list_next(find);
-			// TODO REMOVE USER!
-			free(s);
-	}
-	free(doc->littab);
-
-	for(find = list_begin(doc->blocks);
-		find != list_end(doc->blocks);
-		/* Do Nothing */){
-			BLOCK *s = list_entry(find, BLOCK, elem);
-			find = list_next(find);
-			// TODO REMOVE USER!
-			free(s);
-	}
-	free(doc->blocks);
-
-	free(doc->filename);
-
-	free(doc);  // Dealloc Document.
 }
 
 NODE *node_alloc(){
@@ -684,3 +619,4 @@ void node_dealloc(NODE *node){
 #include "modules/disassembler.c"
 #include "modules/assembler_literal.c"
 #include "modules/assembler_block.c"
+#include "modules/assembler_csect.c"
