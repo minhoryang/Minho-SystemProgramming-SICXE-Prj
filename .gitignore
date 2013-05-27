@@ -3,4 +3,3 @@ src/20091631.out
 src/output.txt
 src/*.asm
 src/*.lst
-src/*.obj
