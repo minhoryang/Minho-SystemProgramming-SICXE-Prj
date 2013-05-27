@@ -254,6 +254,10 @@ int Shell_MainLoop(Environment *env){
 					Shell_Exception(env);
 				break;
 			case 23:  // "progaddr"
+				if(env->len_token == 2)
+					env->progaddr = hex2int(env->tokens[1]);
+				else
+					Shell_Exception(env);
 				break;
 			case 24:  // "loader"
 				break;

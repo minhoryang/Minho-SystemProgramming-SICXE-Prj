@@ -25,6 +25,8 @@
 		// ASSEMBLER
 		CSECT *csect;
 		List *asmdir;
+		// LINKING LOADER
+		size_t progaddr;
 		//
 		bool was_clear;
 	}Environment;

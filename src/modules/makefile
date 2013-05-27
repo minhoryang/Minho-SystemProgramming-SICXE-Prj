@@ -1,5 +1,5 @@
 SRC_DIR = ..
-TARGET = tokenizer memory directory history optab assembler shell
+TARGET = tokenizer memory directory history optab assembler shell linking_loader
 PART_NAME = modules
 TEST_INCLUDING = $(OBJS_DIR)/core/*.o
 
