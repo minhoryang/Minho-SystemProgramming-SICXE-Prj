@@ -53,8 +53,12 @@ Environment *Shell_AllocateEnvironment(){
 			"assemble",
 			"type",
 			"symbol",
-			"disassemble"};
-		env->cmds = AllocStringSwitchSet(cmds, 23);
+			"disassemble",
+			"progaddr",
+			"loader",
+			"run",
+			"bp"};
+		env->cmds = AllocStringSwitchSet(cmds, 27);
 	}
 	{
 		env->memory = (unsigned char *)calloc(MEM_MAX, sizeof(unsigned char));
@@ -249,6 +253,14 @@ int Shell_MainLoop(Environment *env){
 				}else
 					Shell_Exception(env);
 				break;
+			case 23:  // "progaddr"
+				break;
+			case 24:  // "loader"
+				break;
+			case 25:  // "run"
+				break;
+			case 26:  // "bp"
+				break;
 			default:
 				Shell_Exception(env);
 				break;
@@ -279,6 +291,10 @@ void Shell_Help(){
 	printf("type filename\n");
 	printf("symbol\n");
 	printf("disassemble filename\n");
+	printf("progaddr [address]\n");
+	printf("loader [object filename1] [object filename2] [...]\n");
+	printf("run\n");
+	printf("bp [address]\n");
 }
 
 void Shell_Exception(Environment *env){
