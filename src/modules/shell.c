@@ -9,6 +9,7 @@
 #include "modules/memory.h"
 #include "modules/history.h"
 #include "modules/optab.h"
+#include "modules/linking_loader.h"
 
 #ifdef shell_test
 	#include "core/argument.h"
@@ -18,6 +19,7 @@
 	#include "modules/history.c"
 	#include "modules/optab.c"
 	#include "modules/assembler.c"
+	#include "modules/linking_loader.c"
 
 	int main(int argc, char *argv[]){
 		// The main function for Test-driven development (TDD).
@@ -77,10 +79,16 @@ Environment *Shell_AllocateEnvironment(){
 		env->csect = NULL;
 		env->asmdir = assembler_directives_load();
 	}
+	{
+		env->loads = (struct list *)calloc(1, sizeof(struct list));
+		list_init(env->loads);
+	}
 	return env;
 }
 
 void Shell_DeAllocateEnvironment(Environment *env){
+	linking_loader_dealloc(env->loads);
+	free(env->loads);
 	if(env->csect)
 		csect_dealloc(env->csect);
 	assembler_directives_unload(env->asmdir);
@@ -254,12 +262,37 @@ int Shell_MainLoop(Environment *env){
 					Shell_Exception(env);
 				break;
 			case 23:  // "progaddr"
-				if(env->len_token == 2)
-					env->progaddr = hex2int(env->tokens[1]);
-				else
+				if(env->len_token == 2){
+					if(!linking_loader_set_progaddr(
+								env->tokens[1], &env->progaddr))
+						Shell_Exception(env);
+				}else
 					Shell_Exception(env);
 				break;
 			case 24:  // "loader"
+				{
+					linking_loader_dealloc(env->loads);
+					bool isDone = false;
+					{
+						size_t now;
+						for(now = 1; now < env->len_token; now++){
+							isDone = linking_loader_loader(
+									env->tokens[now],
+									env->memory,
+									env->loads,
+									&env->progaddr);
+							if(!isDone){
+								printf("LOAD ERROR @ %s\n",
+										env->tokens[now]);
+								break;
+							}
+						}
+					}
+					if(!isDone)
+						Shell_Exception(env);
+					else
+						linking_loader_printer(env->loads);
+				}
 				break;
 			case 25:  // "run"
 				break;

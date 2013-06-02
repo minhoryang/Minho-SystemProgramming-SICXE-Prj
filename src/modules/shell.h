@@ -27,6 +27,7 @@
 		List *asmdir;
 		// LINKING LOADER
 		size_t progaddr;
+		List *loads;
 		//
 		bool was_clear;
 	}Environment;
