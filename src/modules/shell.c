@@ -274,19 +274,27 @@ int Shell_MainLoop(Environment *env){
 					linking_loader_dealloc(env->loads);
 					bool isDone = false;
 					{
-						size_t now;
-						for(now = 1; now < env->len_token; now++){
-							isDone = linking_loader_loader(
-									env->tokens[now],
-									env->memory,
-									env->loads,
-									&env->progaddr);
-							if(!isDone){
-								printf("LOAD ERROR @ %s\n",
-										env->tokens[now]);
-								break;
+						List *modq = (List *)calloc(1, sizeof(List));
+						list_init(modq);
+						size_t startAddr = env->progaddr;
+						{
+							size_t now;
+								for(now = 1; now < env->len_token; now++){
+								isDone = linking_loader_loader(
+										env->tokens[now],
+										env->memory,
+										env->loads,
+										&startAddr,
+										modq);
+								if(!isDone){
+									printf("LOAD ERROR @ %s\n",
+											env->tokens[now]);
+									break;
+								}
 							}
 						}
+						linking_loader_fill_modify(env->memory, env->loads, modq);
+						free(modq);  // TODO
 					}
 					if(!isDone)
 						Shell_Exception(env);
@@ -295,8 +303,12 @@ int Shell_MainLoop(Environment *env){
 				}
 				break;
 			case 25:  // "run"
+				printf("Not Implemented!\n");
+				Shell_Exception(env);
 				break;
 			case 26:  // "bp"
+				printf("Not Implemented!\n");
+				Shell_Exception(env);
 				break;
 			default:
 				Shell_Exception(env);

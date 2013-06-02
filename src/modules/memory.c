@@ -65,9 +65,13 @@ bool memory_edit(void *memory, size_t address, size_t value){
 	return true;
 }
 
+size_t memory_get(void *memory, size_t address){
+	return *(unsigned char *)(memory+address);
+}
+
 bool memory_fill(void *memory, size_t start, size_t end, size_t value){
 	// Validating start-end.
-	if((start < MEM_MIN) || (MEM_MAX < end))
+	if((start <= MEM_MIN) || (MEM_MAX <= end))
 		return false;
 
 	size_t x;
